@@ -59,59 +59,78 @@ export const DEFAULT_BOXES: BoxConfig[] = [
 /**
  * Balances and auto-adjusts column widths across all grid rows
  * so each row cleanly adds up to 12 columns with zero empty gaps.
+ * When column 1 and 2 are shrunk, the 3rd column (or last box in row)
+ * dynamically expands to fit the remaining space up to 12.
  */
 export function autoAdjustRowWidths(boxesList: BoxConfig[]): BoxConfig[] {
-  const result: BoxConfig[] = [];
-  let currentRow: BoxConfig[] = [];
-  let currentSum = 0;
+  const minSpan = 3;
+  const nonMinimized = boxesList.filter((b) => !b.minimized).map((b) => ({ ...b }));
+  const minimized = boxesList.filter((b) => b.minimized).map((b) => ({ ...b }));
 
-  for (const box of boxesList) {
-    if (box.minimized) {
-      result.push({ ...box });
-      continue;
-    }
+  if (nonMinimized.length === 0) return [...minimized];
 
-    if (currentSum + box.colSpan > 12 && currentRow.length > 0) {
-      const remaining = 12 - currentSum;
-      if (remaining > 0) {
-        const perItem = Math.floor(remaining / currentRow.length);
-        let extra = remaining % currentRow.length;
-        currentRow.forEach((b) => {
-          b.colSpan = Math.min(12, b.colSpan + perItem + (extra > 0 ? 1 : 0));
-          if (extra > 0) extra--;
-        });
+  const packedRows: BoxConfig[][] = [];
+  const queue = [...nonMinimized];
+
+  while (queue.length > 0) {
+    const currentRow: BoxConfig[] = [];
+    let currentSum = 0;
+
+    // Pull first box for this row
+    const first = queue.shift()!;
+    first.colSpan = Math.max(minSpan, Math.min(12, first.colSpan));
+    currentRow.push(first);
+    currentSum = first.colSpan;
+
+    // Greedily fit subsequent boxes into this row
+    while (queue.length > 0 && currentSum < 12) {
+      const spaceLeft = 12 - currentSum;
+      if (spaceLeft < minSpan) {
+        // Leftover space cannot fit another box (minSpan = 3)
+        // Give leftover space to the last box in the current row
+        currentRow[currentRow.length - 1].colSpan += spaceLeft;
+        currentSum = 12;
+        break;
       }
-      result.push(...currentRow);
-      currentRow = [{ ...box }];
-      currentSum = box.colSpan;
-    } else {
-      currentRow.push({ ...box });
-      currentSum += box.colSpan;
+
+      const nextCandidate = queue[0];
+      if (nextCandidate.colSpan <= spaceLeft) {
+        // Candidate fits completely
+        queue.shift();
+        currentRow.push(nextCandidate);
+        currentSum += nextCandidate.colSpan;
+      } else if (spaceLeft >= minSpan) {
+        // Candidate is larger than remaining space, but remaining space can hold it (>= 3)
+        // Pull it into this row and let it dynamically take all remaining space!
+        queue.shift();
+        nextCandidate.colSpan = spaceLeft;
+        currentRow.push(nextCandidate);
+        currentSum = 12;
+      } else {
+        break;
+      }
     }
+
+    // If row ended and space remains (e.g. last row with no more boxes in queue)
+    if (currentSum < 12 && currentRow.length > 0) {
+      currentRow[currentRow.length - 1].colSpan += 12 - currentSum;
+    }
+
+    packedRows.push(currentRow);
   }
 
-  if (currentRow.length > 0) {
-    const remaining = 12 - currentSum;
-    if (remaining > 0) {
-      const perItem = Math.floor(remaining / currentRow.length);
-      let extra = remaining % currentRow.length;
-      currentRow.forEach((b) => {
-        b.colSpan = Math.min(12, b.colSpan + perItem + (extra > 0 ? 1 : 0));
-        if (extra > 0) extra--;
-      });
-    }
-    result.push(...currentRow);
-  }
-
-  return result;
+  const flattened: BoxConfig[] = [];
+  packedRows.forEach((r) => flattened.push(...r));
+  return [...flattened, ...minimized];
 }
 
 /**
  * Fluidly resizes a box's column span:
- * - If expanding, other boxes in the row squeeze to accommodate down to minSpan (3).
- * - If other boxes become smaller than 3, they get pushed to the row down below,
- *   allowing the target box to expand cleanly.
- * - If shrinking, boxes from the row below auto-move back up to fill the empty space!
+ * - Updates the target box span.
+ * - Dynamically adjusts adjacent/subsequent boxes in the row so the 3rd column
+ *   or last column automatically absorbs remaining width to 12.
+ * - If space runs out, boxes auto-wrap to the row below; if space clears,
+ *   boxes from below auto-move back up to fill the void.
  */
 export function fluidResizeSpan(
   boxesList: BoxConfig[],
@@ -121,85 +140,15 @@ export function fluidResizeSpan(
   const minSpan = 3;
   const clampedDesired = Math.max(minSpan, Math.min(12, desiredSpan));
 
-  const nextList = boxesList.map((b) => ({ ...b }));
-  const targetIndex = nextList.findIndex((b) => b.id === targetId);
-  if (targetIndex === -1) return nextList;
-
-  // Partition into current rows
-  const rows: BoxConfig[][] = [];
-  let curRow: BoxConfig[] = [];
-  let curSum = 0;
-
-  for (const b of nextList) {
-    if (b.minimized) {
-      rows.push([b]);
-      continue;
+  // Find target and update its span
+  const updated = boxesList.map((box) => {
+    if (box.id === targetId) {
+      return { ...box, colSpan: clampedDesired };
     }
-    if (curSum + b.colSpan > 12 && curRow.length > 0) {
-      rows.push(curRow);
-      curRow = [b];
-      curSum = b.colSpan;
-    } else {
-      curRow.push(b);
-      curSum += b.colSpan;
-    }
-  }
-  if (curRow.length > 0) rows.push(curRow);
+    return { ...box };
+  });
 
-  // Find target's row
-  const rowIndex = rows.findIndex((r) => r.some((b) => b.id === targetId));
-  if (rowIndex === -1) {
-    nextList[targetIndex].colSpan = clampedDesired;
-    return autoAdjustRowWidths(nextList);
-  }
-
-  const row = rows[rowIndex];
-  const targetInRow = row.find((b) => b.id === targetId)!;
-  const otherBoxes = row.filter((b) => b.id !== targetId);
-
-  if (otherBoxes.length > 0) {
-    const spaceForOthers = 12 - clampedDesired;
-
-    if (spaceForOthers >= otherBoxes.length * minSpan) {
-      // Other boxes can absorb the expansion by squeezing
-      targetInRow.colSpan = clampedDesired;
-      const perOther = Math.floor(spaceForOthers / otherBoxes.length);
-      let rem = spaceForOthers % otherBoxes.length;
-      otherBoxes.forEach((b) => {
-        b.colSpan = perOther + (rem > 0 ? 1 : 0);
-        if (rem > 0) rem--;
-      });
-    } else {
-      // Not enough space for other boxes on this row (too small < 3)!
-      // Push other boxes to the next row down below
-      targetInRow.colSpan = 12;
-      otherBoxes.forEach((b) => {
-        b.colSpan = Math.max(minSpan, Math.min(6, Math.floor(12 / otherBoxes.length)));
-      });
-    }
-  } else {
-    // Target was alone in this row
-    if (clampedDesired < 12 && rowIndex < rows.length - 1) {
-      // Target is shrinking, check if first box in row below can be pulled UP!
-      const nextRow = rows[rowIndex + 1];
-      const spaceAvailable = 12 - clampedDesired;
-      if (nextRow.length > 0 && spaceAvailable >= minSpan) {
-        targetInRow.colSpan = clampedDesired;
-        const candidate = nextRow[0];
-        candidate.colSpan = spaceAvailable;
-      } else {
-        targetInRow.colSpan = clampedDesired;
-      }
-    } else {
-      targetInRow.colSpan = clampedDesired;
-    }
-  }
-
-  // Re-flatten rows
-  const flattened: BoxConfig[] = [];
-  rows.forEach((r) => flattened.push(...r));
-
-  return autoAdjustRowWidths(flattened);
+  return autoAdjustRowWidths(updated);
 }
 
 export function useGridLayout() {

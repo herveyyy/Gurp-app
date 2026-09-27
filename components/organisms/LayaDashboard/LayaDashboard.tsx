@@ -6,6 +6,7 @@ import { useLayaDashboard, SAMPLE_TEMPLATES } from "./layaDashboard.hooks";
 import { DraggableBox, COL_SPAN_CLASSES } from "./DraggableBox";
 import { useGridLayout } from "./useGridLayout";
 import { ThemeSelector } from "@/components/molecules/ThemeSelector/ThemeSelector";
+import { FiZap, FiCreditCard, FiShield, FiMessageSquare, FiCpu } from "react-icons/fi";
 import type { LayaTicketTriageResponse } from "@/lib/entities/laya.type";
 
 export function LayaDashboard() {
@@ -85,13 +86,29 @@ export function LayaDashboard() {
   const getQueueInfo = (queue: string) => {
     switch (queue.toLowerCase()) {
       case "infrastructure":
-        return { badge: "bg-purple-100 text-purple-900 border-purple-300", code: "ENG-INFRA", icon: "⚡" };
+        return {
+          badge: "bg-purple-100 text-purple-900 border-purple-300",
+          code: "ENG-INFRA",
+          icon: <FiZap className="w-5 h-5 text-purple-700" />,
+        };
       case "billing":
-        return { badge: "bg-emerald-100 text-emerald-900 border-emerald-300", code: "FIN-REV", icon: "💳" };
+        return {
+          badge: "bg-emerald-100 text-emerald-900 border-emerald-300",
+          code: "FIN-REV",
+          icon: <FiCreditCard className="w-5 h-5 text-emerald-700" />,
+        };
       case "security":
-        return { badge: "bg-rose-100 text-rose-900 border-rose-300", code: "SEC-OPS", icon: "🛡️" };
+        return {
+          badge: "bg-rose-100 text-rose-900 border-rose-300",
+          code: "SEC-OPS",
+          icon: <FiShield className="w-5 h-5 text-rose-700" />,
+        };
       default:
-        return { badge: "bg-sky-100 text-sky-900 border-sky-300", code: "CUST-SUPP", icon: "💬" };
+        return {
+          badge: "bg-sky-100 text-sky-900 border-sky-300",
+          code: "CUST-SUPP",
+          icon: <FiMessageSquare className="w-5 h-5 text-sky-700" />,
+        };
     }
   };
 
@@ -294,7 +311,7 @@ export function LayaDashboard() {
           </div>
         ) : (
           <div className="p-8 text-center border border-dashed border-outline-variant/30 rounded-xl flex flex-col items-center justify-center h-full min-h-[200px]">
-            <span className="text-3xl mb-2">⚡</span>
+            <FiCpu className="w-8 h-8 mb-2 text-primary/70 animate-pulse" />
             <p className="text-xs font-mono font-bold text-on-surface uppercase">Awaiting Triage Input</p>
             <p className="text-[11px] text-on-surface-muted max-w-xs mt-1">
               Inject a scenario dial and trigger inference to view decision telemetry.

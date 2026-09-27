@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { FiChevronDown } from "react-icons/fi";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
 export function ThemeSelector() {
@@ -39,7 +40,7 @@ export function ThemeSelector() {
         <span className="truncate max-w-[130px] sm:max-w-none">
           {activePreset.label}
         </span>
-        <span className="text-[9px] text-on-surface-muted">▾</span>
+        <FiChevronDown className="w-3 h-3 text-on-surface-muted" />
       </button>
 
       {isOpen && (

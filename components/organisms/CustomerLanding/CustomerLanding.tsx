@@ -1,7 +1,29 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import {
+  FiZap,
+  FiShield,
+  FiCreditCard,
+  FiMessageSquare,
+  FiAlertTriangle,
+  FiCpu,
+  FiClock,
+  FiCheckCircle,
+  FiLock,
+  FiLayout,
+  FiSliders,
+  FiTrendingUp,
+  FiBarChart2,
+  FiArrowRight,
+  FiArrowLeft,
+  FiChevronDown,
+  FiTerminal,
+  FiActivity,
+  FiDollarSign,
+  FiLayers,
+} from "react-icons/fi";
 import { ThemeSelector } from "@/components/molecules/ThemeSelector/ThemeSelector";
 import { LayaDashboard } from "@/components/organisms/LayaDashboard/LayaDashboard";
 import { signOutAction } from "@/lib/domain/actions/auth.actions";
@@ -16,18 +38,43 @@ interface CustomerLandingProps {
   defaultView?: "landing" | "console";
 }
 
-const DEMO_SCENARIOS = [
+type ScenarioIconType = "alert" | "billing" | "security" | "support";
+
+interface ScenarioItem {
+  id: string;
+  label: string;
+  badge: string;
+  iconType: ScenarioIconType;
+  subject: string;
+  body: string;
+  customer: string;
+  result: {
+    queue: string;
+    code: string;
+    urgency: string;
+    urgencyPercent: number;
+    priority: string;
+    priorityBadge: string;
+    churnRisk: string;
+    churnColor: string;
+    sentiment: string;
+    action: string;
+    latency: string;
+  };
+}
+
+const DEMO_SCENARIOS: ScenarioItem[] = [
   {
     id: "outage",
-    label: "🔥 Production Outage",
+    label: "Production Outage",
     badge: "CRITICAL INFRA",
+    iconType: "alert",
     subject: "Primary RDS Cluster deadlock - 504 Gateway Timeout across all API nodes",
     body: "Our payment processing pipeline is completely frozen. Over 4,000 checkout transactions are timing out with code 504. Database connection pool reached 100% capacity.",
     customer: "Enterprise (Scale Tier)",
     result: {
       queue: "Infrastructure",
       code: "ENG-INFRA",
-      icon: "⚡",
       urgency: "3.0 / 3.0",
       urgencyPercent: 100,
       priority: "CRITICAL P0",
@@ -41,15 +88,15 @@ const DEMO_SCENARIOS = [
   },
   {
     id: "billing",
-    label: "💳 Billing Dispute",
+    label: "Billing Dispute",
     badge: "FINANCIAL ESCALATION",
+    iconType: "billing",
     subject: "Overbilled $14,200 on monthly invoice #INV-88910 - cancel our contract immediately",
     body: "We were charged three times for our annual seat renewal. Our CFO has blocked the corporate card and instructed legal to initiate a chargeback if not credited today.",
     customer: "Global Enterprise Corp",
     result: {
       queue: "Billing Operations",
       code: "FIN-REV",
-      icon: "💳",
       urgency: "2.7 / 3.0",
       urgencyPercent: 90,
       priority: "HIGH P1",
@@ -63,15 +110,15 @@ const DEMO_SCENARIOS = [
   },
   {
     id: "security",
-    label: "🛡️ SSO Auth Vulnerability",
+    label: "SSO Auth Vulnerability",
     badge: "SECOPS ESCALATION",
+    iconType: "security",
     subject: "Unrecognized Okta SAML assertions detected from anomalous IP address",
     body: "Automated SIEM alert: Multiple brute force attempts bypassing our secondary conditional access policy. Session tokens generated without MFA challenge.",
     customer: "FinTech Compliance Partner",
     result: {
       queue: "Security Operations",
       code: "SEC-OPS",
-      icon: "🛡️",
       urgency: "2.9 / 3.0",
       urgencyPercent: 96,
       priority: "CRITICAL P0",
@@ -85,15 +132,15 @@ const DEMO_SCENARIOS = [
   },
   {
     id: "general",
-    label: "💬 Feature Expansion Request",
+    label: "Feature Expansion Request",
     badge: "STANDARD SUPPORT",
+    iconType: "support",
     subject: "Question about bulk webhook export integration and CSV report filters",
     body: "Hi team, we are planning our Q4 reporting sync and would love to know if there is a REST endpoint to pull historical triage metrics in CSV format.",
     customer: "Mid-Market Growth",
     result: {
       queue: "Customer Success",
       code: "CUST-GROWTH",
-      icon: "💬",
       urgency: "0.8 / 3.0",
       urgencyPercent: 26,
       priority: "LOW P3",
@@ -126,18 +173,31 @@ const FAQS = [
   },
 ];
 
+function ScenarioIcon({ type, className }: { type: ScenarioIconType; className?: string }) {
+  switch (type) {
+    case "alert":
+      return <FiAlertTriangle className={className || "w-4 h-4 text-rose-600"} />;
+    case "billing":
+      return <FiCreditCard className={className || "w-4 h-4 text-amber-600"} />;
+    case "security":
+      return <FiShield className={className || "w-4 h-4 text-rose-600"} />;
+    case "support":
+    default:
+      return <FiMessageSquare className={className || "w-4 h-4 text-emerald-600"} />;
+  }
+}
+
 export function CustomerLanding({ session, defaultView = "landing" }: CustomerLandingProps) {
   const [currentView, setCurrentView] = useState<"landing" | "console">(defaultView);
-  const [selectedScenario, setSelectedScenario] = useState(DEMO_SCENARIOS[0]);
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioItem>(DEMO_SCENARIOS[0]);
   const [isSimulating, setIsSimulating] = useState(false);
   const [customSubject, setCustomSubject] = useState(DEMO_SCENARIOS[0].subject);
   const [customBody, setCustomBody] = useState(DEMO_SCENARIOS[0].body);
 
   // ROI Calculator State
   const [monthlyTickets, setMonthlyTickets] = useState(25000);
-  const [, startTransition] = useTransition();
 
-  const handleSelectScenario = (sc: (typeof DEMO_SCENARIOS)[0]) => {
+  const handleSelectScenario = (sc: ScenarioItem) => {
     setSelectedScenario(sc);
     setCustomSubject(sc.subject);
     setCustomBody(sc.body);
@@ -146,8 +206,8 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
   };
 
   // Calculations for customer ROI
-  const hoursSavedPerMonth = Math.round((monthlyTickets * 4.2) / 60); // assumes 4.2 mins manual triage per ticket
-  const llmCost = Math.round(monthlyTickets * 0.025); // $0.025 per GPT-4o ticket routing
+  const hoursSavedPerMonth = Math.round((monthlyTickets * 4.2) / 60);
+  const llmCost = Math.round(monthlyTickets * 0.025);
   const gurpCost = Math.round(monthlyTickets * 0.001);
   const dollarsSaved = Math.max(0, llmCost - gurpCost);
 
@@ -173,14 +233,16 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
                 onClick={() => setCurrentView("landing")}
                 className="px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-mono font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                <span>← Customer View</span>
+                <FiArrowLeft className="w-3.5 h-3.5" />
+                <span>Customer View</span>
               </button>
 
               <Link
                 href="/settings"
-                className="px-3 py-1.5 rounded-lg border border-outline-variant/20 text-xs font-mono text-on-surface hover:bg-surface-container-low transition-colors"
+                className="px-3 py-1.5 rounded-lg border border-outline-variant/20 text-xs font-mono text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-1.5"
               >
-                Settings
+                <FiSliders className="w-3.5 h-3.5" />
+                <span>Settings</span>
               </Link>
 
               <ThemeSelector />
@@ -233,17 +295,21 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
 
           {/* Center Links */}
           <nav className="hidden lg:flex items-center gap-6 text-xs font-mono font-bold text-on-surface-muted">
-            <a href="#simulator" className="hover:text-primary transition-colors">
-              [SIMULATOR]
+            <a href="#simulator" className="hover:text-primary transition-colors flex items-center gap-1">
+              <FiActivity className="w-3.5 h-3.5" />
+              <span>[SIMULATOR]</span>
             </a>
-            <a href="#calculator" className="hover:text-primary transition-colors">
-              [ROI CALCULATOR]
+            <a href="#calculator" className="hover:text-primary transition-colors flex items-center gap-1">
+              <FiDollarSign className="w-3.5 h-3.5" />
+              <span>[ROI CALCULATOR]</span>
             </a>
-            <a href="#comparison" className="hover:text-primary transition-colors">
-              [BENCHMARKS]
+            <a href="#comparison" className="hover:text-primary transition-colors flex items-center gap-1">
+              <FiBarChart2 className="w-3.5 h-3.5" />
+              <span>[BENCHMARKS]</span>
             </a>
-            <a href="#features" className="hover:text-primary transition-colors">
-              [CAPABILITIES]
+            <a href="#features" className="hover:text-primary transition-colors flex items-center gap-1">
+              <FiLayers className="w-3.5 h-3.5" />
+              <span>[CAPABILITIES]</span>
             </a>
             <a href="#faq" className="hover:text-primary transition-colors">
               [FAQ]
@@ -259,9 +325,10 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
                 <button
                   type="button"
                   onClick={() => setCurrentView("console")}
-                  className="px-4 py-2 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  <span>⚡ Open Console</span>
+                  <FiTerminal className="w-3.5 h-3.5" />
+                  <span>Open Console</span>
                 </button>
                 <form action={signOutAction}>
                   <button
@@ -282,10 +349,10 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
                 </Link>
                 <Link
                   href="/sign-in"
-                  className="px-4 py-2 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1"
+                  className="px-4 py-2 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5"
                 >
                   <span>Launch Console</span>
-                  <span>→</span>
+                  <FiArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             )}
@@ -326,7 +393,7 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
               className="px-7 py-4 rounded-2xl btn-primary-gradient text-on-primary font-mono font-bold text-sm tracking-wider uppercase transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center gap-2.5 cursor-pointer"
             >
               <span>ENTER OPERATOR CONSOLE</span>
-              <span>⚡</span>
+              <FiTerminal className="w-4 h-4" />
             </button>
           ) : (
             <Link
@@ -334,37 +401,53 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
               className="px-7 py-4 rounded-2xl btn-primary-gradient text-on-primary font-mono font-bold text-sm tracking-wider uppercase transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center gap-2.5"
             >
               <span>GET STARTED FREE</span>
-              <span>⚡</span>
+              <FiZap className="w-4 h-4" />
             </Link>
           )}
 
           <a
             href="#simulator"
-            className="px-7 py-4 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-mono font-bold text-sm tracking-wider uppercase transition-all shadow-sm"
+            className="px-7 py-4 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-mono font-bold text-sm tracking-wider uppercase transition-all shadow-sm flex items-center gap-2"
           >
-            [TRY LIVE SIMULATOR ↓]
+            <span>[TRY LIVE SIMULATOR]</span>
+            <FiChevronDown className="w-4 h-4" />
           </a>
         </div>
 
         {/* Hero Telemetry Stat Bar */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 border border-outline-variant/25 rounded-3xl bg-surface-container-lowest/80 p-5 shadow-bloom backdrop-blur-md divide-y sm:divide-y-0 sm:divide-x divide-outline-variant/20 max-w-5xl mx-auto">
           <div className="p-3">
-            <p className="text-[11px] font-mono text-on-surface-muted uppercase font-semibold">Triage Velocity</p>
+            <div className="flex items-center justify-center gap-1.5 text-on-surface-muted">
+              <FiClock className="w-3.5 h-3.5" />
+              <p className="text-[11px] font-mono uppercase font-semibold">Triage Velocity</p>
+            </div>
             <p className="text-3xl font-black font-mono text-primary mt-1">{"< 50ms"}</p>
             <span className="text-[11px] font-mono text-emerald-700 font-bold">14x Faster than GPT-4o</span>
           </div>
+
           <div className="p-3">
-            <p className="text-[11px] font-mono text-on-surface-muted uppercase font-semibold">Routing Precision</p>
+            <div className="flex items-center justify-center gap-1.5 text-on-surface-muted">
+              <FiCheckCircle className="w-3.5 h-3.5" />
+              <p className="text-[11px] font-mono uppercase font-semibold">Routing Precision</p>
+            </div>
             <p className="text-3xl font-black font-mono text-on-surface mt-1">99.2%</p>
             <span className="text-[11px] font-mono text-on-surface-muted">ModernBERT Linear Heads</span>
           </div>
+
           <div className="p-3">
-            <p className="text-[11px] font-mono text-on-surface-muted uppercase font-semibold">Hallucination Rate</p>
+            <div className="flex items-center justify-center gap-1.5 text-on-surface-muted">
+              <FiShield className="w-3.5 h-3.5" />
+              <p className="text-[11px] font-mono uppercase font-semibold">Hallucination Rate</p>
+            </div>
             <p className="text-3xl font-black font-mono text-emerald-700 mt-1">0.0%</p>
             <span className="text-[11px] font-mono text-emerald-700 font-bold">Deterministic Probability</span>
           </div>
+
           <div className="p-3">
-            <p className="text-[11px] font-mono text-on-surface-muted uppercase font-semibold">Deployment</p>
+            <div className="flex items-center justify-center gap-1.5 text-on-surface-muted">
+              <FiLock className="w-3.5 h-3.5" />
+              <p className="text-[11px] font-mono uppercase font-semibold">Deployment</p>
+            </div>
             <p className="text-3xl font-black font-mono text-secondary mt-1">Private VPC</p>
             <span className="text-[11px] font-mono text-on-surface-muted">Zero External API Egress</span>
           </div>
@@ -410,13 +493,20 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
                       : "border-outline-variant/20 bg-surface-container-low hover:bg-surface-container-high"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-mono font-bold text-secondary uppercase">
                       {sc.badge}
                     </span>
-                    {isActive && <span className="w-2 h-2 rounded-full bg-primary animate-ping" />}
+                    {isActive ? (
+                      <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                    ) : (
+                      <ScenarioIcon type={sc.iconType} className="w-3.5 h-3.5 text-on-surface-muted" />
+                    )}
                   </div>
-                  <p className="text-sm font-bold text-on-surface truncate">{sc.label}</p>
+                  <div className="flex items-center gap-2">
+                    <ScenarioIcon type={sc.iconType} className="w-4 h-4 shrink-0" />
+                    <p className="text-sm font-bold text-on-surface truncate">{sc.label}</p>
+                  </div>
                 </button>
               );
             })}
@@ -466,7 +556,8 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
                 disabled={isSimulating}
                 className="w-full py-3.5 rounded-xl btn-primary-gradient text-on-primary font-mono font-bold text-xs uppercase tracking-wider transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-md flex items-center justify-center gap-2"
               >
-                {isSimulating ? "COMPUTING TENSOR HEADS..." : "RUN SUB-50MS TRIAGE INFERENCE"}
+                <FiCpu className="w-4 h-4" />
+                <span>{isSimulating ? "COMPUTING TENSOR HEADS..." : "RUN SUB-50MS TRIAGE INFERENCE"}</span>
               </button>
             </div>
 
@@ -487,7 +578,7 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
                 <div>
                   <p className="text-[10px] font-mono text-on-surface-muted uppercase font-bold">AUTOMATED ROUTING QUEUE</p>
                   <div className="flex items-center gap-2.5 mt-1.5">
-                    <span className="text-2xl">{selectedScenario.result.icon}</span>
+                    <ScenarioIcon type={selectedScenario.iconType} className="w-6 h-6 text-primary" />
                     <span className="text-xl font-black font-mono uppercase text-on-surface">
                       {selectedScenario.result.queue}
                     </span>
@@ -602,7 +693,7 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
                 <p className="text-3xl sm:text-4xl font-black font-mono text-primary mt-2">
                   {hoursSavedPerMonth.toLocaleString()} hrs
                 </p>
-                <p className="text-[11px] font-mono text-emerald-700 mt-1">/ month recovered</p>
+                <p className="text-[11px] font-mono text-emerald-700 mt-1 font-semibold">/ month recovered</p>
               </div>
 
               <div className="p-6 rounded-2xl border border-outline-variant/20 bg-surface-container-low text-center">
@@ -702,8 +793,8 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="p-6 rounded-3xl border border-outline-variant/30 bg-surface-container-lowest shadow-xs space-y-3.5 hover:border-primary/40 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-mono text-xl">
-              ⚡
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <FiZap className="w-5 h-5" />
             </div>
             <h3 className="font-display font-bold text-lg text-on-surface">Sub-50ms Non-Autoregressive</h3>
             <p className="text-xs text-on-surface-muted leading-relaxed font-sans">
@@ -712,8 +803,8 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
           </div>
 
           <div className="p-6 rounded-3xl border border-outline-variant/30 bg-surface-container-lowest shadow-xs space-y-3.5 hover:border-primary/40 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary font-mono text-xl">
-              🛡️
+            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+              <FiShield className="w-5 h-5" />
             </div>
             <h3 className="font-display font-bold text-lg text-on-surface">Zero Hallucination Heads</h3>
             <p className="text-xs text-on-surface-muted leading-relaxed font-sans">
@@ -722,8 +813,8 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
           </div>
 
           <div className="p-6 rounded-3xl border border-outline-variant/30 bg-surface-container-lowest shadow-xs space-y-3.5 hover:border-primary/40 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-700 font-mono text-xl">
-              🔒
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-700">
+              <FiLock className="w-5 h-5" />
             </div>
             <h3 className="font-display font-bold text-lg text-on-surface">3-Tier Air-Gapped Security</h3>
             <p className="text-xs text-on-surface-muted leading-relaxed font-sans">
@@ -732,8 +823,8 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
           </div>
 
           <div className="p-6 rounded-3xl border border-outline-variant/30 bg-surface-container-lowest shadow-xs space-y-3.5 hover:border-primary/40 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-mono text-xl">
-              📐
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <FiLayout className="w-5 h-5" />
             </div>
             <h3 className="font-display font-bold text-lg text-on-surface">Draggable Fluid Grid Engine</h3>
             <p className="text-xs text-on-surface-muted leading-relaxed font-sans">
@@ -742,8 +833,8 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
           </div>
 
           <div className="p-6 rounded-3xl border border-outline-variant/30 bg-surface-container-lowest shadow-xs space-y-3.5 hover:border-primary/40 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary font-mono text-xl">
-              🎨
+            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+              <FiSliders className="w-5 h-5" />
             </div>
             <h3 className="font-display font-bold text-lg text-on-surface">Dynamic Theming & Presets</h3>
             <p className="text-xs text-on-surface-muted leading-relaxed font-sans">
@@ -752,8 +843,8 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
           </div>
 
           <div className="p-6 rounded-3xl border border-outline-variant/30 bg-surface-container-lowest shadow-xs space-y-3.5 hover:border-primary/40 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-700 font-mono text-xl">
-              📊
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-700">
+              <FiTrendingUp className="w-5 h-5" />
             </div>
             <h3 className="font-display font-bold text-lg text-on-surface">Customer Churn Prediction</h3>
             <p className="text-xs text-on-surface-muted leading-relaxed font-sans">
@@ -810,16 +901,18 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
                 <button
                   type="button"
                   onClick={() => setCurrentView("console")}
-                  className="px-8 py-4 rounded-2xl bg-surface text-on-surface font-mono font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  className="px-8 py-4 rounded-2xl bg-surface text-on-surface font-mono font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
                 >
-                  Enter Operator Console →
+                  <span>Enter Operator Console</span>
+                  <FiArrowRight className="w-4 h-4" />
                 </button>
               ) : (
                 <Link
                   href="/sign-in"
-                  className="px-8 py-4 rounded-2xl bg-surface text-on-surface font-mono font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all"
+                  className="px-8 py-4 rounded-2xl bg-surface text-on-surface font-mono font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                 >
-                  Launch Command Console →
+                  <span>Launch Command Console</span>
+                  <FiArrowRight className="w-4 h-4" />
                 </Link>
               )}
             </div>

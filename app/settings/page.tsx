@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { FiArrowLeft } from "react-icons/fi";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
 export default function SettingsPage() {
@@ -32,7 +33,7 @@ export default function SettingsPage() {
               href="/"
               className="px-3 py-1.5 rounded-xl border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container-high transition-colors font-mono text-xs font-bold text-primary flex items-center gap-1.5"
             >
-              <span>←</span>
+              <FiArrowLeft className="w-3.5 h-3.5" />
               <span>[COMMAND CONSOLE]</span>
             </Link>
             <div>
