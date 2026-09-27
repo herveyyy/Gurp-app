@@ -1,11 +1,9 @@
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/mysql2";
-import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/node-postgres";
 
-const pool = mysql.createPool({
-  uri: process.env.DATABASE_URL,
-  connectionLimit: 10,
-  enableKeepAlive: true,
+export const database = drizzle({
+  connection: {
+    connectionString: process.env.DATABASE_URL!,
+    ssl: true,
+  },
 });
-
-export const database = drizzle(pool);
