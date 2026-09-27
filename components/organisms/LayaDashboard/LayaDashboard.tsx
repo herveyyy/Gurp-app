@@ -465,7 +465,7 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
       {/* ========================================================= */}
       {/* 1. COMPACT TOP UNIFIED WORKBENCH HEADER                   */}
       {/* ========================================================= */}
-      <header className="h-14 border-b border-outline-variant/20 bg-surface-container-lowest/80 backdrop-blur-md px-4 flex items-center justify-between gap-3 shrink-0 select-none">
+      <header className="relative z-50 h-14 border-b border-outline-variant/20 bg-surface-container-lowest/95 backdrop-blur-md px-4 flex items-center justify-between gap-3 shrink-0 select-none overflow-visible">
         {/* Left: Sidebar Toggle & View Switcher */}
         <div className="flex items-center gap-2">
           {onExitConsole && (
@@ -536,7 +536,7 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
         </div>
 
         {/* Center: Model Target Quick Selector with Animated Dropdown */}
-        <div ref={modelDropdownRef} className="hidden lg:flex items-center gap-2 text-xs font-mono text-on-surface-muted relative">
+        <div ref={modelDropdownRef} className="hidden lg:flex items-center gap-2 text-xs font-mono text-on-surface-muted relative z-[100]">
           <span className="text-[10px] font-bold uppercase">Target Model:</span>
           <button
             type="button"
@@ -549,7 +549,7 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
           </button>
 
           {isModelDropdownOpen && (
-            <div className="dropdown-animated absolute top-full left-20 mt-1.5 w-64 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest/95 shadow-2xl z-50 p-2 space-y-1 backdrop-blur-md">
+            <div className="dropdown-animated absolute top-full left-0 mt-1.5 w-72 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-2xl z-[100] p-2 space-y-1">
               {[
                 { id: "english", label: "convai/laya:english", desc: "110M params • FastCPU optimized", badge: "DEFAULT" },
                 { id: "multilingual", label: "convai/laya:multilingual", desc: "100+ languages supported", badge: "GLOBAL" },
@@ -645,7 +645,7 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
       {/* ========================================================= */}
       {/* 2. MAIN 3-PANEL BODY (Left Sidebar - Center - Right Sidebar)*/}
       {/* ========================================================= */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="relative z-0 flex-1 flex overflow-hidden">
         {/* 2A. LEFT WORKBENCH SIDEBAR */}
         <aside
           className={`sidebar-panel flex flex-col shrink-0 select-none bg-surface-container-lowest border-outline-variant/20 overflow-hidden ${

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiChevronDown } from "react-icons/fi";
 import { useTheme } from "@/lib/theme/ThemeProvider";
 
@@ -23,12 +23,14 @@ export function ThemeSelector() {
   }, [isOpen]);
 
   return (
-    <div ref={containerRef} className="relative inline-block text-left">
+    <div ref={containerRef} className="relative z-[100] inline-block text-left">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="trigger-chip flex items-center gap-2 px-2.5 py-1 rounded-xl border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container-high transition-all text-[11px] font-mono font-bold text-on-surface cursor-pointer shadow-xs"
         title="Change application color theme"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
       >
         <span
           className="w-3 h-3 rounded-full border border-outline-variant/40 shrink-0"
@@ -44,12 +46,16 @@ export function ThemeSelector() {
       </button>
 
       {isOpen && (
-        <div className="dropdown-animated absolute right-0 mt-1.5 w-72 sm:w-80 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest/95 shadow-2xl z-50 p-2.5 space-y-1.5 backdrop-blur-md">
+        <div
+          role="listbox"
+          className="dropdown-animated absolute right-0 mt-1.5 w-72 sm:w-80 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-2xl z-[100] p-2.5 space-y-1.5"
+        >
           <div className="flex items-center justify-between px-2 py-1 border-b border-outline-variant/20 mb-1">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-muted">
               Select Color Theme
             </span>
             <button
+              type="button"
               onClick={() => {
                 resetTheme();
                 setIsOpen(false);
