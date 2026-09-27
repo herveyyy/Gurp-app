@@ -310,6 +310,7 @@ html {
 .box-accordion {
   display: grid;
   grid-template-rows: 1fr;
+  min-height: 0;
   transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1),
               opacity 0.25s ease;
 }
@@ -318,11 +319,15 @@ html {
   grid-template-rows: 0fr;
   opacity: 0;
   pointer-events: none;
+  flex: 0;
 }
 
 .box-accordion-inner {
   overflow: hidden;
   min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Smooth Chevron Spin */

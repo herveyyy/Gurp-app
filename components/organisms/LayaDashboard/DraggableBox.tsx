@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { FiMaximize2, FiMinimize2, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { useRef, useState, type DragEvent, type PointerEvent, type ReactNode } from "react";
+import { FiChevronDown, FiMaximize2, FiMinimize2 } from "react-icons/fi";
 
 export interface BoxConfig {
   id: string;
@@ -23,18 +23,18 @@ interface DraggableBoxProps {
   onUpdateSpan: (id: string, newSpan: number) => void;
   onToggleMinimize: (id: string) => void;
   onUpdateHeight?: (id: string, newHeight: number) => void;
-  onDragStart: (e: React.DragEvent, id: string) => void;
-  onDragOver: (e: React.DragEvent, id: string) => void;
-  onDragLeave: (e: React.DragEvent, id: string) => void;
-  onDrop: (e: React.DragEvent, id: string) => void;
+  onDragStart: (e: DragEvent, id: string) => void;
+  onDragOver: (e: DragEvent, id: string) => void;
+  onDragLeave: (e: DragEvent, id: string) => void;
+  onDrop: (e: DragEvent, id: string) => void;
   onDragEnd: () => void;
   isDraggingCurrent?: boolean;
   isDragOverTarget?: boolean;
   draggedBoxTitle?: string;
   draggedBoxSpan?: number;
   onAutoFitWidth?: (id: string) => void;
-  children: React.ReactNode;
-  headerAction?: React.ReactNode;
+  children: ReactNode;
+  headerAction?: ReactNode;
 }
 
 export const COL_SPAN_CLASSES: Record<number, string> = {
@@ -74,7 +74,6 @@ export function DraggableBox({
   headerAction,
 }: DraggableBoxProps) {
   const [isResizing, setIsResizing] = useState(false);
-  const [resizeDirection, setResizeDirection] = useState<"width" | "height" | "both" | null>(null);
   const [previewSpan, setPreviewSpan] = useState<number>(colSpan);
   const [previewHeight, setPreviewHeight] = useState<number>(height || 360);
 
@@ -92,22 +91,21 @@ export function DraggableBox({
   };
 
   // Multi-axis resize handler (Width, Height, Both) with Auto-fit preview
-  const startResize = (direction: "width" | "height" | "both", e: React.PointerEvent) => {
+  const startResize = (direction: "width" | "height" | "both", e: PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     setIsResizing(true);
-    setResizeDirection(direction);
 
     const startX = e.clientX;
     const startY = e.clientY;
 
     const parentGrid = boxRef.current?.closest(".grid") as HTMLElement | null;
-    const gridWidth = parentGrid ? parentGrid.offsetWidth : (window.innerWidth - 64);
+    const gridWidth = parentGrid ? parentGrid.offsetWidth : window.innerWidth - 64;
     const colWidth = gridWidth / 12;
 
     const initialSpan = colSpan;
-    const initialHeight = boxRef.current ? boxRef.current.offsetHeight : (height || 360);
+    const initialHeight = boxRef.current ? boxRef.current.offsetHeight : height || 360;
 
     let currentCandidateSpan = initialSpan;
     let currentCandidateHeight = initialHeight;
@@ -115,18 +113,24 @@ export function DraggableBox({
     setPreviewSpan(initialSpan);
     setPreviewHeight(initialHeight);
 
-    const onPointerMove = (moveEvent: PointerEvent) => {
-      // Calculate Width resizing
+    const validSpans = [3, 4, 5, 6, 7, 8, 12];
+    const snapSpan = (raw: number) => {
+      const clamped = Math.max(3, Math.min(12, raw));
+      return validSpans.reduce((best, span) =>
+        Math.abs(span - clamped) < Math.abs(best - clamped) ? span : best
+      );
+    };
+
+    const onPointerMove = (moveEvent: globalThis.PointerEvent) => {
       if (direction === "width" || direction === "both") {
         const deltaX = moveEvent.clientX - startX;
         const currentPixelWidth = initialSpan * colWidth + deltaX;
         const rawSpan = Math.round(currentPixelWidth / colWidth);
-        const clampedSpan = Math.max(3, Math.min(12, rawSpan));
+        const clampedSpan = snapSpan(rawSpan);
         currentCandidateSpan = clampedSpan;
         setPreviewSpan(clampedSpan);
       }
 
-      // Calculate Height resizing
       if (direction === "height" || direction === "both") {
         const deltaY = moveEvent.clientY - startY;
         const clampedHeight = Math.max(160, Math.min(1200, initialHeight + deltaY));
@@ -137,9 +141,7 @@ export function DraggableBox({
 
     const onPointerUp = () => {
       setIsResizing(false);
-      setResizeDirection(null);
 
-      // Auto-fit commit
       if (direction === "width" || direction === "both") {
         onUpdateSpan(id, currentCandidateSpan);
       }
@@ -160,6 +162,7 @@ export function DraggableBox({
   const activeHeight = isResizing ? previewHeight : height;
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: HTML5 drag-and-drop card shell
     <div
       ref={boxRef}
       id={id}
@@ -170,64 +173,58 @@ export function DraggableBox({
       onDrop={(e) => onDrop(e, id)}
       onDragEnd={onDragEnd}
       style={{
-        gridColumn: `span ${activeColSpan}`,
+        // Span is driven by Tailwind lg:col-span-* only — never inline gridColumn,
+        // so sub-lg layouts stay full-width (col-span-12) and avoid mid-glyph clipping.
+        // Use height (not only minHeight) so the footer grip stays pinned to the bottom edge while resizing.
+        height: minimized ? undefined : activeHeight ? `${activeHeight}px` : undefined,
         minHeight: minimized ? "auto" : activeHeight ? `${activeHeight}px` : undefined,
       }}
-      className={`min-w-0 col-span-12 ${colClass} relative flex flex-col rounded-2xl border bg-surface-container-lowest transition-[grid-column,border,box-shadow] duration-150 select-none shadow-xs group ${
+      className={`min-w-0 col-span-12 ${colClass} relative flex flex-col rounded-2xl border bg-surface-container-lowest transition-[border,box-shadow] duration-150 select-none shadow-xs group ${
         isDraggingCurrent
-          ? "opacity-25 scale-[0.98] border-dashed border-primary"
+          ? "opacity-40 border-dashed border-primary"
           : isDragOverTarget
-          ? "ring-2 ring-primary ring-offset-2 border-primary bg-primary/5"
-          : isResizing
-          ? "border-primary ring-2 ring-primary/40 shadow-bloom"
-          : "border-outline-variant/30 hover:border-outline-variant/50"
+            ? "ring-2 ring-primary ring-offset-2 border-primary bg-primary/5"
+            : isResizing
+              ? "border-primary ring-2 ring-primary/40 shadow-bloom"
+              : "border-outline-variant/30 hover:border-outline-variant/50"
       }`}
     >
-      {/* ======================================================== */}
-      {/* LIVE AUTO-FIT PREVIEW WIREFRAME OVERLAY                  */}
-      {/* ======================================================== */}
       {isResizing && (
-        <div className="absolute inset-0 z-30 pointer-events-none rounded-2xl border-2 border-dashed border-primary bg-primary/[0.04] backdrop-blur-[1px] flex flex-col justify-between p-3 animate-fadeIn">
-          {/* Top HUD */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 bg-primary text-on-primary px-3 py-1 rounded-lg text-[10px] font-mono font-bold tracking-wider uppercase shadow-md">
+        <div className="absolute inset-x-0 top-0 bottom-6 z-30 pointer-events-none rounded-t-2xl border-2 border-b-0 border-dashed border-primary bg-primary/[0.03] flex flex-col p-3 animate-fadeIn">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 bg-primary text-on-primary px-3 py-1 rounded-lg text-[10px] font-mono font-bold tracking-wider uppercase shadow-md shrink-0">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>
                 AUTO-FITTING: {previewSpan}/12 COLS ({Math.round((previewSpan / 12) * 100)}%)
               </span>
             </div>
-            <div className="bg-surface-container-lowest/95 border border-outline-variant/30 px-2.5 py-0.5 rounded-lg text-[10px] font-mono text-on-surface shadow-xs font-bold">
+            <div className="bg-surface-container-lowest border border-outline-variant/30 px-2.5 py-0.5 rounded-lg text-[10px] font-mono text-on-surface shadow-xs font-bold shrink-0">
               {Math.round(previewHeight)}px Height
             </div>
           </div>
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* DROP TARGET PREVIEW OVERLAY (Zero-Shift / Non-Glitching) */}
-      {/* ======================================================== */}
       {isDragOverTarget && !isDraggingCurrent && (
-        <div className="absolute inset-0 z-40 pointer-events-none rounded-2xl border-2 border-dashed border-primary bg-primary/[0.12] backdrop-blur-[2px] flex flex-col items-center justify-center p-4 text-center select-none shadow-bloom animate-fadeIn">
-          <div className="flex items-center gap-2 bg-primary text-on-primary px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase tracking-wider shadow-md">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span>[AUTO-FIT DROP ZONE // {draggedBoxTitle || "DROP TO SWAP"}]</span>
+        <div className="absolute inset-0 z-40 pointer-events-none rounded-2xl border-2 border-dashed border-primary bg-primary/10 flex flex-col items-center justify-center p-4 text-center select-none shadow-bloom animate-fadeIn">
+          <div className="flex items-center gap-2 bg-primary text-on-primary px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase tracking-wider shadow-md max-w-full">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            <span className="truncate">
+              {`[AUTO-FIT DROP ZONE // ${draggedBoxTitle || "DROP TO SWAP"}]`}
+            </span>
           </div>
           <p className="text-xs font-mono text-on-surface mt-2 font-bold">
             Drop here to swap positions & auto-fit into this slot
           </p>
           {draggedBoxSpan && (
-            <span className="text-[10px] font-mono text-primary font-semibold mt-1 bg-surface-container-lowest/90 px-2.5 py-0.5 rounded-md border border-primary/25">
+            <span className="text-[10px] font-mono text-primary font-semibold mt-1 bg-surface-container-lowest px-2.5 py-0.5 rounded-md border border-primary/25">
               Footprint: {draggedBoxSpan}/12 Columns ({Math.round((draggedBoxSpan / 12) * 100)}% Width)
             </span>
           )}
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* BOX HEADER TOOLBAR & DRAG HANDLE                         */}
-      {/* ======================================================== */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-outline-variant/20 bg-surface-container-low/70 rounded-t-2xl gap-2">
-        {/* Left: Drag grip & Title */}
+      <div className="shrink-0 flex items-center justify-between px-3.5 py-2.5 border-b border-outline-variant/20 bg-surface-container-low/70 rounded-t-2xl gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <div
             title="Drag to reposition section"
@@ -252,11 +249,9 @@ export function DraggableBox({
           </div>
         </div>
 
-        {/* Right: Sizing, Actions, Minimize */}
         <div className="flex items-center gap-1.5 shrink-0">
           {headerAction}
 
-          {/* Size Pill: Width Controls */}
           <div className="flex items-center rounded-lg border border-outline-variant/25 bg-surface-container-lowest px-1 py-0.5 text-[10px] font-mono font-bold text-on-surface-muted">
             <button
               type="button"
@@ -267,13 +262,14 @@ export function DraggableBox({
             >
               -
             </button>
-            <span
-              onClick={() => onAutoFitWidth && onAutoFitWidth(id)}
+            <button
+              type="button"
+              onClick={() => onAutoFitWidth?.(id)}
               title="Click to auto-adjust width quota (4 -> 6 -> 8 -> 12)"
               className="trigger-chip px-1 text-[9px] text-primary cursor-pointer hover:bg-primary/10 rounded transition-colors"
             >
               {colSpan}/12
-            </span>
+            </button>
             <button
               type="button"
               onClick={() => handleSpanStep(1)}
@@ -285,7 +281,6 @@ export function DraggableBox({
             </button>
           </div>
 
-          {/* Maximize Toggle */}
           <button
             type="button"
             onClick={() => onUpdateSpan(id, colSpan === 12 ? 6 : 12)}
@@ -295,7 +290,6 @@ export function DraggableBox({
             {colSpan === 12 ? <FiMinimize2 className="w-3 h-3" /> : <FiMaximize2 className="w-3 h-3" />}
           </button>
 
-          {/* Minimize/Collapse Toggle */}
           <button
             type="button"
             onClick={() => onToggleMinimize(id)}
@@ -307,63 +301,60 @@ export function DraggableBox({
         </div>
       </div>
 
-      {/* ======================================================== */}
-      {/* BOX BODY (COLLAPSIBLE WITH SMOOTH ACCORDION ANIMATION)   */}
-      {/* ======================================================== */}
-      <div className={`box-accordion ${minimized ? "collapsed" : ""}`}>
-        <div className="box-accordion-inner flex-1 flex flex-col">
-          {/* Main Content Viewport */}
-          <div className="flex-1 p-4 flex flex-col overflow-hidden relative">
-            {children}
+      <div className={`box-accordion min-h-0 ${minimized ? "collapsed" : "flex-1"}`}>
+        <div className="box-accordion-inner flex h-full min-h-0 flex-col min-w-0">
+          <div className="flex-1 min-h-0 p-4 flex flex-col overflow-x-hidden overflow-y-auto relative min-w-0">
+            <div className="min-w-0 w-full h-full">{children}</div>
           </div>
 
-          {/* Dedicated Card Footer & Resize Grip Bar */}
-          <div className="shrink-0 h-6 border-t border-outline-variant/15 bg-surface-container-low/40 rounded-b-2xl px-3 flex items-center justify-between select-none relative z-20">
-            {/* Status / Snap Hint during resize */}
-            <div className="flex items-center gap-1.5 text-[9px] font-mono text-on-surface-muted min-w-0">
+          <div className="shrink-0 mt-auto h-6 border-t border-outline-variant/15 bg-surface-container-low/40 rounded-b-2xl px-3 flex items-center justify-between select-none relative z-40">
+            <div className="flex items-center gap-1.5 text-[9px] font-mono text-on-surface-muted min-w-0 pr-16">
               {isResizing ? (
-                <span className="text-primary font-bold flex items-center gap-1.5 animate-pulse">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="text-primary font-bold flex items-center gap-1.5 animate-pulse truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                   Release pointer to snap & auto-fit grid slot
                 </span>
               ) : (
-                <span className="text-[8px] tracking-wider uppercase opacity-40">
+                <span className="text-[8px] tracking-wider uppercase opacity-40 truncate">
                   {colSpan}/12 COLS • {height || 540}PX
                 </span>
               )}
             </div>
 
-            {/* Bottom Grip Handle: Drag vertically to resize height */}
-            <div
+            <button
+              type="button"
               onPointerDown={(e) => startResize("height", e)}
               title="Drag vertically to auto-fit height"
-              className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-28 cursor-ns-resize flex items-center justify-center group/bottom py-1"
+              aria-label="Resize height"
+              className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-28 cursor-ns-resize flex items-center justify-center group/bottom py-1 z-10 bg-transparent border-0 p-0"
             >
-              <div className="h-1 w-12 bg-outline-variant/40 group-hover/bottom:bg-primary group-hover/bottom:w-16 rounded-full transition-all" />
-            </div>
+              <span className="h-1 w-12 bg-outline-variant/50 group-hover/bottom:bg-primary group-hover/bottom:w-16 rounded-full transition-all" />
+            </button>
 
-            {/* Corner Grip Handle: Drag to resize both width and height */}
-            <div
+            <button
+              type="button"
               onPointerDown={(e) => startResize("both", e)}
               title="Drag to auto-fit both width and height simultaneously"
-              className="cursor-nwse-resize text-on-surface-muted/60 hover:text-primary hover:scale-110 select-none p-1 transition-transform flex items-center justify-center -mr-1"
+              aria-label="Resize width and height"
+              className="relative z-10 cursor-nwse-resize text-on-surface-muted/70 hover:text-primary select-none p-1 flex items-center justify-center -mr-1 bg-transparent border-0"
             >
               <FiMaximize2 className="w-3 h-3 rotate-90" />
-            </div>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Right Edge Handle: Drag horizontally or double-click to auto-adjust width */}
       {!minimized && (
-        <div
+        <button
+          type="button"
           onPointerDown={(e) => startResize("width", e)}
-          onDoubleClick={() => onAutoFitWidth && onAutoFitWidth(id)}
+          onDoubleClick={() => onAutoFitWidth?.(id)}
           title="Drag horizontally or double-click to auto-adjust width"
-          className="absolute top-12 right-0 bottom-6 w-2.5 cursor-ew-resize hover:bg-primary/20 transition-colors flex items-center justify-center group/edge z-20"
+          aria-label="Resize width"
+          className="absolute top-12 right-0 bottom-6 w-2.5 cursor-ew-resize hover:bg-primary/20 transition-colors flex items-center justify-center group/edge z-20 bg-transparent border-0 p-0"
         >
-          <div className="w-0.5 h-10 bg-outline-variant/40 group-hover/edge:bg-primary group-hover/edge:h-14 rounded-full transition-all" />
-        </div>
+          <span className="w-0.5 h-10 bg-outline-variant/40 group-hover/edge:bg-primary group-hover/edge:h-14 rounded-full transition-all" />
+        </button>
       )}
     </div>
   );

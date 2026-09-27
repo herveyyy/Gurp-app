@@ -1,32 +1,32 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useLayaDashboard, SAMPLE_TEMPLATES } from "./layaDashboard.hooks";
-import { DraggableBox, COL_SPAN_CLASSES } from "./DraggableBox";
-import { useGridLayout } from "./useGridLayout";
 import { ThemeSelector } from "@/components/molecules/ThemeSelector/ThemeSelector";
+import { signOutAction } from "@/lib/domain/actions/auth.actions";
+import type { LayaTicketTriageResponse } from "@/lib/entities/laya.type";
 import {
-  FiZap,
-  FiCreditCard,
-  FiShield,
-  FiMessageSquare,
-  FiCpu,
-  FiSettings,
-  FiSidebar,
-  FiLayout,
-  FiLayers,
   FiActivity,
-  FiRefreshCw,
+  FiArrowLeft,
+  FiCheckCircle,
+  FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
-  FiChevronDown,
-  FiCheckCircle,
-  FiArrowLeft,
+  FiCpu,
+  FiCreditCard,
+  FiLayers,
+  FiLayout,
+  FiMessageSquare,
+  FiRefreshCw,
+  FiSettings,
+  FiShield,
+  FiSidebar,
+  FiZap,
 } from "react-icons/fi";
+import { DraggableBox } from "./DraggableBox";
+import { SAMPLE_TEMPLATES, useLayaDashboard } from "./layaDashboard.hooks";
+import { useGridLayout } from "./useGridLayout";
 import { VSCodeAgenticPlayground } from "./VSCodeAgenticPlayground";
-import type { LayaTicketTriageResponse } from "@/lib/entities/laya.type";
-import { signOutAction } from "@/lib/domain/actions/auth.actions";
 
 export interface LayaDashboardProps {
   onExitConsole?: () => void;
@@ -47,17 +47,11 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
     triageResult,
     urgencyResult,
     batchResult,
-    systemOneResult,
-    sysStateJson,
-    setSysStateJson,
-    sysQuestionsJson,
-    setSysQuestionsJson,
     isPending,
     notice,
     refreshHealth,
     handleTriage,
     handleBatchTriage,
-    handleRunSystemOne,
     handleLoadModel,
     handleUnloadModel,
   } = useLayaDashboard();
@@ -161,9 +155,9 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
       case "box_presets":
         return (
           <div className="grid grid-cols-1 gap-2 h-full content-start">
-            {SAMPLE_TEMPLATES.map((tmpl, idx) => (
+            {SAMPLE_TEMPLATES.map((tmpl) => (
               <button
-                key={idx}
+                key={tmpl.data.ticket_id}
                 type="button"
                 onClick={() => setTicketForm(tmpl.data)}
                 className="trigger-card p-2.5 rounded-xl border border-outline-variant/20 bg-surface-container-low hover:bg-surface-container-high transition-all text-left cursor-pointer group min-w-0"
@@ -184,60 +178,76 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
 
       case "box_payload":
         return (
-          <div className="space-y-3.5 flex flex-col h-full justify-between">
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-mono text-on-surface-muted uppercase mb-1">
+          <div className="@container space-y-3.5 flex flex-col h-full justify-between min-w-0">
+            <div className="space-y-3 min-w-0">
+              <div className="grid grid-cols-1 @[220px]:grid-cols-2 gap-3 min-w-0">
+                <div className="min-w-0">
+                  <label
+                    htmlFor="laya-ticket-id"
+                    className="block text-[10px] font-mono text-on-surface-muted uppercase mb-1"
+                  >
                     Ticket Ref ID
                   </label>
                   <input
+                    id="laya-ticket-id"
                     type="text"
                     value={ticketForm.ticket_id}
                     onChange={(e) => setTicketForm({ ...ticketForm, ticket_id: e.target.value })}
-                    className="w-full px-3 py-1.5 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none focus:border-primary"
+                    className="w-full min-w-0 px-3 py-1.5 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none focus:border-primary"
                   />
                 </div>
-                <div>
-                  <label className="block text-[10px] font-mono text-on-surface-muted uppercase mb-1">
+                <div className="min-w-0">
+                  <label
+                    htmlFor="laya-account-tier"
+                    className="block text-[10px] font-mono text-on-surface-muted uppercase mb-1"
+                  >
                     Account Tier
                   </label>
                   <input
+                    id="laya-account-tier"
                     type="text"
                     value={ticketForm.customer || ""}
                     onChange={(e) => setTicketForm({ ...ticketForm, customer: e.target.value })}
-                    className="w-full px-3 py-1.5 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none focus:border-primary"
+                    className="w-full min-w-0 px-3 py-1.5 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none focus:border-primary"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-mono text-on-surface-muted uppercase mb-1">
+              <div className="min-w-0">
+                <label
+                  htmlFor="laya-incident-subject"
+                  className="block text-[10px] font-mono text-on-surface-muted uppercase mb-1"
+                >
                   Incident Subject Line
                 </label>
                 <input
+                  id="laya-incident-subject"
                   type="text"
                   value={ticketForm.subject}
                   onChange={(e) => setTicketForm({ ...ticketForm, subject: e.target.value })}
-                  className="w-full px-3 py-1.5 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none focus:border-primary"
+                  className="w-full min-w-0 px-3 py-1.5 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none focus:border-primary"
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-mono text-on-surface-muted uppercase mb-1">
+              <div className="min-w-0">
+                <label
+                  htmlFor="laya-issue-body"
+                  className="block text-[10px] font-mono text-on-surface-muted uppercase mb-1"
+                >
                   Full Issue Statement / Log
                 </label>
                 <textarea
+                  id="laya-issue-body"
                   rows={4}
                   value={ticketForm.body}
                   onChange={(e) => setTicketForm({ ...ticketForm, body: e.target.value })}
-                  className="w-full p-2.5 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none focus:border-primary resize-none"
+                  className="w-full min-w-0 p-2.5 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none focus:border-primary resize-none break-words whitespace-pre-wrap"
                 />
               </div>
             </div>
 
-            <div className="space-y-2 pt-2">
-              <div className="flex gap-2">
+            <div className="space-y-2 pt-2 min-w-0">
+              <div className="flex flex-col @[220px]:flex-row gap-2">
                 <button
                   type="button"
                   onClick={() => setTriageMode("full")}
@@ -266,7 +276,7 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
                 type="button"
                 onClick={handleTriage}
                 disabled={isPending}
-                className="trigger-btn w-full py-2.5 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold tracking-wide uppercase cursor-pointer shadow-xs disabled:opacity-50"
+                className="trigger-btn w-full py-2.5 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold tracking-wide uppercase cursor-pointer shadow-xs disabled:opacity-50 text-center leading-snug"
               >
                 {isPending ? "INFERRING TENSORS..." : "DISPATCH SYSTEM 1 TRIAGE (SUB-50MS)"}
               </button>
@@ -349,10 +359,10 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
             </div>
           </div>
         ) : (
-          <div className="p-8 text-center border border-dashed border-outline-variant/30 rounded-xl flex flex-col items-center justify-center h-full min-h-[200px]">
-            <FiCpu className="w-8 h-8 mb-2 text-primary/70 animate-pulse" />
+          <div className="p-6 sm:p-8 text-center border border-dashed border-outline-variant/30 rounded-xl flex flex-col items-center justify-center h-full min-h-[200px] min-w-0">
+            <FiCpu className="w-8 h-8 mb-2 text-primary/70 animate-pulse shrink-0" />
             <p className="text-xs font-mono font-bold text-on-surface uppercase">Awaiting Triage Input</p>
-            <p className="text-[11px] text-on-surface-muted max-w-xs mt-1">
+            <p className="text-[11px] text-on-surface-muted max-w-xs mt-1 break-words">
               Inject a scenario dial and trigger inference to view decision telemetry.
             </p>
           </div>
@@ -487,6 +497,7 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
           {/* View Switcher Quick Pills */}
           <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl border border-outline-variant/20 text-[11px] font-mono">
             <button
+              type="button"
               onClick={() => setActiveView("systemone")}
               className={`trigger-btn px-3 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeView === "systemone"
@@ -495,9 +506,10 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
               }`}
             >
               <FiCpu className="w-3.5 h-3.5 text-primary" />
-              <span>SYS 1 // AGENTIC IDE</span>
+              <span>{`SYS 1 // AGENTIC IDE`}</span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveView("matrix")}
               className={`trigger-btn px-3 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeView === "matrix"
@@ -509,6 +521,7 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
               <span>MODULAR GRID</span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveView("batch")}
               className={`trigger-btn px-3 py-1 rounded-lg font-bold transition-all cursor-pointer hidden md:flex items-center gap-1.5 ${
                 activeView === "batch"
@@ -618,7 +631,9 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
       {serverError && (
         <div className="mx-4 mt-3 p-3 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-800 text-xs font-mono flex items-center justify-between">
           <span>[ALERT] {serverError}</span>
-          <button onClick={refreshHealth} className="underline font-bold cursor-pointer">RECONNECT</button>
+          <button type="button" onClick={refreshHealth} className="underline font-bold cursor-pointer">
+            RECONNECT
+          </button>
         </div>
       )}
       {notice && (
@@ -665,12 +680,14 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
                   </span>
                   <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                     <button
+                      type="button"
                       onClick={() => applyPreset("compact")}
                       className="trigger-chip px-2 py-1.5 rounded-lg border border-outline-variant/25 text-on-surface-muted hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer text-center font-bold"
                     >
                       [COMPACT]
                     </button>
                     <button
+                      type="button"
                       onClick={() => applyPreset("widescreen")}
                       className="trigger-chip px-2 py-1.5 rounded-lg border border-outline-variant/25 text-on-surface-muted hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer text-center font-bold"
                     >
@@ -678,12 +695,14 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
                     </button>
                   </div>
                   <button
+                    type="button"
                     onClick={autoAdjustWidths}
                     className="trigger-btn w-full py-1.5 rounded-lg border border-primary/30 text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer text-center font-bold text-[10px]"
                   >
                     [AUTO-ADJUST 12-COLS]
                   </button>
                   <button
+                    type="button"
                     onClick={resetLayout}
                     className="trigger-btn w-full py-1.5 rounded-lg border border-outline-variant/25 text-on-surface-muted hover:text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer text-center font-bold text-[10px]"
                   >
@@ -698,9 +717,9 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
                   1-CLICK INCIDENT DIALS
                 </span>
                 <div className="space-y-1.5">
-                  {SAMPLE_TEMPLATES.map((tmpl, idx) => (
+                  {SAMPLE_TEMPLATES.map((tmpl) => (
                     <button
-                      key={idx}
+                      key={tmpl.data.ticket_id}
                       type="button"
                       onClick={() => setTicketForm(tmpl.data)}
                       className="trigger-card w-full p-2 rounded-xl border border-outline-variant/20 bg-surface-container-low hover:bg-surface-container-high transition-all text-left cursor-pointer group"
@@ -793,9 +812,10 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
               <div className="lg:col-span-6 border border-outline-variant/30 rounded-2xl bg-surface-container-lowest p-4 space-y-3 shadow-xs">
                 <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
                   <span className="text-xs font-mono font-bold text-on-surface uppercase">
-                    [BOX B1 // BATCH PAYLOAD INGEST]
+                    {`[BOX B1 // BATCH PAYLOAD INGEST]`}
                   </span>
                   <button
+                    type="button"
                     onClick={() => {
                       try {
                         const parsed = JSON.parse(batchRawInput);
@@ -821,7 +841,7 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
               <div className="lg:col-span-6 border border-outline-variant/30 rounded-2xl bg-surface-container-lowest p-4 space-y-3 shadow-xs">
                 <div className="flex items-center justify-between border-b border-outline-variant/20 pb-2">
                   <span className="text-xs font-mono font-bold text-on-surface uppercase">
-                    [BOX B2 // INTAKE STREAM RESULTS] ({batchResult ? batchResult.total : 0})
+                    {`[BOX B2 // INTAKE STREAM RESULTS] (${batchResult ? batchResult.total : 0})`}
                   </span>
                   <span className="text-[10px] font-mono text-primary font-bold">STREAM PROCESSED</span>
                 </div>
@@ -830,7 +850,7 @@ export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {
                   <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
                     {batchResult.results.map((res: LayaTicketTriageResponse, idx: number) => (
                       <div
-                        key={idx}
+                        key={res.ticket_id || `TCK-BATCH-${idx + 1}`}
                         className="p-3 rounded-xl border border-outline-variant/20 bg-surface-container-low flex items-center justify-between gap-3 text-xs"
                       >
                         <div>
