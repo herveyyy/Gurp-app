@@ -187,7 +187,7 @@ export function DraggableBox({
       {/* LIVE AUTO-FIT PREVIEW WIREFRAME OVERLAY                  */}
       {/* ======================================================== */}
       {isResizing && (
-        <div className="absolute inset-0 z-30 pointer-events-none rounded-2xl border-2 border-dashed border-primary bg-primary/[0.08] backdrop-blur-[1px] flex flex-col justify-between p-3 animate-fadeIn">
+        <div className="absolute inset-0 z-30 pointer-events-none rounded-2xl border-2 border-dashed border-primary bg-primary/[0.04] backdrop-blur-[1px] flex flex-col justify-between p-3 animate-fadeIn">
           {/* Top HUD */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 bg-primary text-on-primary px-3 py-1 rounded-lg text-[10px] font-mono font-bold tracking-wider uppercase shadow-md">
@@ -196,32 +196,9 @@ export function DraggableBox({
                 AUTO-FITTING: {previewSpan}/12 COLS ({Math.round((previewSpan / 12) * 100)}%)
               </span>
             </div>
-            <div className="bg-surface-container-lowest/90 border border-outline-variant/30 px-2 py-0.5 rounded text-[10px] font-mono text-on-surface">
+            <div className="bg-surface-container-lowest/95 border border-outline-variant/30 px-2.5 py-0.5 rounded-lg text-[10px] font-mono text-on-surface shadow-xs font-bold">
               {Math.round(previewHeight)}px Height
             </div>
-          </div>
-
-          {/* Grid Track Visualizer */}
-          <div className="grid grid-cols-12 gap-1 w-full my-auto opacity-40">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-8 rounded border border-dashed text-[8px] font-mono flex items-center justify-center ${
-                  i < previewSpan
-                    ? "bg-primary/20 border-primary text-primary font-bold"
-                    : "bg-surface-container-high/40 border-outline-variant/30 text-on-surface-muted"
-                }`}
-              >
-                {i + 1}
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom HUD Hint */}
-          <div className="text-center">
-            <span className="text-[10px] font-mono font-semibold bg-surface-container-lowest/90 text-primary px-2.5 py-1 rounded-md border border-primary/30">
-              Release pointer to snap & auto-fit grid slot
-            </span>
           </div>
         </div>
       )}
@@ -335,43 +312,59 @@ export function DraggableBox({
       {/* ======================================================== */}
       <div className={`box-accordion ${minimized ? "collapsed" : ""}`}>
         <div className="box-accordion-inner flex-1 flex flex-col">
+          {/* Main Content Viewport */}
           <div className="flex-1 p-4 flex flex-col overflow-hidden relative">
             {children}
+          </div>
 
-            {/* ==================================================== */}
-            {/* INTERACTIVE MULTI-AXIS RESIZE HANDLES                */}
-            {/* ==================================================== */}
-
-            {/* 1. Right Edge Handle: Width auto-fit resize */}
-            <div
-              onPointerDown={(e) => startResize("width", e)}
-              onDoubleClick={() => onAutoFitWidth && onAutoFitWidth(id)}
-              title="Drag horizontally or double-click to auto-adjust width"
-              className="absolute top-0 right-0 w-2.5 h-full cursor-ew-resize hover:bg-primary/20 transition-colors flex items-center justify-center group/edge z-20"
-            >
-              <div className="w-0.5 h-8 bg-outline-variant/40 group-hover/edge:bg-primary group-hover/edge:h-12 rounded-full transition-all" />
+          {/* Dedicated Card Footer & Resize Grip Bar */}
+          <div className="shrink-0 h-6 border-t border-outline-variant/15 bg-surface-container-low/40 rounded-b-2xl px-3 flex items-center justify-between select-none relative z-20">
+            {/* Status / Snap Hint during resize */}
+            <div className="flex items-center gap-1.5 text-[9px] font-mono text-on-surface-muted min-w-0">
+              {isResizing ? (
+                <span className="text-primary font-bold flex items-center gap-1.5 animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Release pointer to snap & auto-fit grid slot
+                </span>
+              ) : (
+                <span className="text-[8px] tracking-wider uppercase opacity-40">
+                  {colSpan}/12 COLS • {height || 540}PX
+                </span>
+              )}
             </div>
 
-            {/* 2. Bottom Edge Handle: Height auto-fit resize */}
+            {/* Bottom Grip Handle: Drag vertically to resize height */}
             <div
               onPointerDown={(e) => startResize("height", e)}
               title="Drag vertically to auto-fit height"
-              className="absolute bottom-0 left-0 w-full h-2.5 cursor-ns-resize hover:bg-primary/20 transition-colors flex items-center justify-center group/bottom z-20"
+              className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-28 cursor-ns-resize flex items-center justify-center group/bottom py-1"
             >
-              <div className="h-0.5 w-12 bg-outline-variant/40 group-hover/bottom:bg-primary group-hover/bottom:w-16 rounded-full transition-all" />
+              <div className="h-1 w-12 bg-outline-variant/40 group-hover/bottom:bg-primary group-hover/bottom:w-16 rounded-full transition-all" />
             </div>
 
-            {/* 3. Corner Handle: Simultaneous Width & Height resize */}
+            {/* Corner Grip Handle: Drag to resize both width and height */}
             <div
               onPointerDown={(e) => startResize("both", e)}
               title="Drag to auto-fit both width and height simultaneously"
-              className="absolute bottom-0.5 right-0.5 w-5 h-5 cursor-nwse-resize text-on-surface-muted/50 hover:text-primary hover:scale-110 select-none text-[12px] font-mono flex items-end justify-end p-0.5 z-20 transition-transform"
+              className="cursor-nwse-resize text-on-surface-muted/60 hover:text-primary hover:scale-110 select-none p-1 transition-transform flex items-center justify-center -mr-1"
             >
               <FiMaximize2 className="w-3 h-3 rotate-90" />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Right Edge Handle: Drag horizontally or double-click to auto-adjust width */}
+      {!minimized && (
+        <div
+          onPointerDown={(e) => startResize("width", e)}
+          onDoubleClick={() => onAutoFitWidth && onAutoFitWidth(id)}
+          title="Drag horizontally or double-click to auto-adjust width"
+          className="absolute top-12 right-0 bottom-6 w-2.5 cursor-ew-resize hover:bg-primary/20 transition-colors flex items-center justify-center group/edge z-20"
+        >
+          <div className="w-0.5 h-10 bg-outline-variant/40 group-hover/edge:bg-primary group-hover/edge:h-14 rounded-full transition-all" />
+        </div>
+      )}
     </div>
   );
 }

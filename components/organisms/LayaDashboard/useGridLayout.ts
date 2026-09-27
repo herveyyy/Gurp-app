@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { BoxConfig } from "./DraggableBox";
 
-const STORAGE_KEY = "tiyakaluod_laya_grid_layout_v3";
+const STORAGE_KEY = "tiyakaluod_laya_grid_layout_v4";
 
 export const DEFAULT_BOXES: BoxConfig[] = [
   {
@@ -11,7 +11,7 @@ export const DEFAULT_BOXES: BoxConfig[] = [
     title: "[BOX 01 // SCENARIO PRESETS]",
     badge: "1-Click",
     colSpan: 4,
-    height: 520,
+    height: 540,
     minimized: false,
   },
   {
@@ -19,7 +19,7 @@ export const DEFAULT_BOXES: BoxConfig[] = [
     title: "[BOX 02 // TICKET PAYLOAD]",
     badge: "Active",
     colSpan: 4,
-    height: 520,
+    height: 540,
     minimized: false,
   },
   {
@@ -27,7 +27,7 @@ export const DEFAULT_BOXES: BoxConfig[] = [
     title: "[BOX 03 // DECISION MATRIX]",
     badge: "ModernBERT",
     colSpan: 4,
-    height: 520,
+    height: 540,
     minimized: false,
   },
   {
