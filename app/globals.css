@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  /* Layer 0 — canvas */
-  --surface: #f6fafa;
-  --on-surface: #181c1d;
+  /* Layer 0 — canvas (Beige / Warm Sand) */
+  --surface: #fbf8f3;
+  --on-surface: #231c16;
 
   /* Surface hierarchy */
-  --surface-container-low: #f0f4f4;
+  --surface-container-low: #f4ede2;
   --surface-container-lowest: #ffffff;
-  --surface-container-high: #e8ecec;
-  --surface-container-highest: #dee4e4;
-  --surface-bright: #f6fafa;
-  --surface-variant: #dce4e4;
+  --surface-container-high: #ebe0d1;
+  --surface-container-highest: #e2d4c2;
+  --surface-bright: #fbf8f3;
+  --surface-variant: #e7d9c8;
 
-  /* Brand */
-  --primary: #0a5c66;
-  --primary-container: #0d8494;
+  /* Brand (Warm Espresso Brown & Caramel) */
+  --primary: #7a4419;
+  --primary-container: #965624;
   --on-primary: #ffffff;
-  --secondary: #c76a1a;
-  --secondary-container: #f4dcc8;
+  --secondary: #b06c2c;
+  --secondary-container: #f3dec8;
   --on-secondary: #ffffff;
-  --tertiary: #004f4f;
+  --tertiary: #553b2a;
 
   /* Utility */
-  --outline-variant: #bfc8cd;
-  --on-surface-muted: #5c6568;
+  --outline-variant: #d0c3b2;
+  --on-surface-muted: #706354;
 
-  --shadow-bloom: 0 12px 32px rgb(24 28 29 / 4%);
+  --shadow-bloom: 0 12px 32px rgb(35 28 22 / 5%);
 }
 
 @theme inline {

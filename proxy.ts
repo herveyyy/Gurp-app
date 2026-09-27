@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromHeaders } from "@/lib/domain/services/auth.service";
 
 const authPaths = ["/sign-in", "/sign-up"];
-const publicPaths = ["/", "/sign-in", "/sign-up", "/landing"];
+const publicPaths = ["/sign-in", "/sign-up", "/landing"];
 
 function matchesPath(pathname: string, paths: string[]) {
   return paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -11,7 +11,7 @@ function matchesPath(pathname: string, paths: string[]) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/laya")) {
+  if (pathname.startsWith("/api/auth")) {
     return NextResponse.next();
   }
 

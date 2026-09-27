@@ -9,6 +9,7 @@ export const auth = betterAuth({
     baseURL: process.env.BETTER_AUTH_URL,
     emailAndPassword: {
         enabled: true,
+        minPasswordLength: 3,
     },
     database: drizzleAdapter(database, {
         provider: "pg",
