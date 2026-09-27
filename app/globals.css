@@ -150,3 +150,82 @@ html {
   mask-image: linear-gradient(to bottom, black 60%, transparent);
 }
 
+/* ========================================================= */
+/* PROUD TRIGGER ANIMATIONS & MICRO-INTERACTIONS            */
+/* ========================================================= */
+.trigger-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(0);
+}
+
+.trigger-btn:hover {
+  transform: translateY(-1.5px) scale(1.015);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.trigger-btn:active {
+  transform: translateY(0.5px) scale(0.975);
+}
+
+.trigger-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.22),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: none;
+}
+
+.trigger-btn:hover::after {
+  left: 140%;
+  transition: left 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes radar-ripple {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.radar-ripple {
+  position: relative;
+}
+
+.radar-ripple::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 2px solid var(--primary);
+  animation: radar-ripple 1.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes subtle-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.animate-subtle-float {
+  animation: subtle-float 2.4s ease-in-out infinite;
+}
+
