@@ -214,54 +214,11 @@ export function CustomerLanding({ session, defaultView = "landing" }: CustomerLa
   // If authenticated user selects console view, render LayaDashboard with quick toggle back
   if (session && currentView === "console") {
     return (
-      <div className="min-h-screen flex flex-col bg-surface font-sans text-on-surface">
-        {/* Floating switcher dock to return to Customer Landing */}
-        <header className="w-full border-b border-outline-variant/15 bg-surface-container-lowest/90 backdrop-blur-md sticky top-0 z-30">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-xl btn-primary-gradient flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                G
-              </span>
-              <span className="font-display font-extrabold text-lg text-on-surface tracking-tight">
-                Gurp <span className="text-primary font-mono text-xs font-normal">/ Operator Console</span>
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setCurrentView("landing")}
-                className="px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-mono font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer flex items-center gap-1.5"
-              >
-                <FiArrowLeft className="w-3.5 h-3.5" />
-                <span>Customer View</span>
-              </button>
-
-              <Link
-                href="/settings"
-                className="px-3 py-1.5 rounded-lg border border-outline-variant/20 text-xs font-mono text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-1.5"
-              >
-                <FiSliders className="w-3.5 h-3.5" />
-                <span>Settings</span>
-              </Link>
-
-              <ThemeSelector />
-
-              <form action={signOutAction}>
-                <button
-                  type="submit"
-                  className="text-xs px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface font-mono transition-colors cursor-pointer"
-                >
-                  Sign out
-                </button>
-              </form>
-            </div>
-          </div>
-        </header>
-
-        <main className="flex-1">
-          <LayaDashboard />
-        </main>
+      <div className="h-screen w-screen overflow-hidden flex flex-col bg-surface font-sans text-on-surface">
+        <LayaDashboard
+          onExitConsole={() => setCurrentView("landing")}
+          session={session}
+        />
       </div>
     );
   }

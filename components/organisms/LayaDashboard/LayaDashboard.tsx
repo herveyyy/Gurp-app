@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useLayaDashboard, SAMPLE_TEMPLATES } from "./layaDashboard.hooks";
 import { DraggableBox, COL_SPAN_CLASSES } from "./DraggableBox";
@@ -20,12 +20,20 @@ import {
   FiRefreshCw,
   FiChevronLeft,
   FiChevronRight,
+  FiChevronDown,
   FiCheckCircle,
+  FiArrowLeft,
 } from "react-icons/fi";
 import { VSCodeAgenticPlayground } from "./VSCodeAgenticPlayground";
 import type { LayaTicketTriageResponse } from "@/lib/entities/laya.type";
+import { signOutAction } from "@/lib/domain/actions/auth.actions";
 
-export function LayaDashboard() {
+export interface LayaDashboardProps {
+  onExitConsole?: () => void;
+  session?: unknown;
+}
+
+export function LayaDashboard({ onExitConsole, session }: LayaDashboardProps = {}) {
   const {
     health,
     presets,
@@ -78,7 +86,23 @@ export function LayaDashboard() {
   const [showLeftSidebar, setShowLeftSidebar] = useState(true);
   const [showRightSidebar, setShowRightSidebar] = useState(true);
   const [showRaw, setShowRaw] = useState(false);
-  const [activeView, setActiveView] = useState<"vscode" | "matrix" | "batch" | "systemone">("vscode");
+  const [activeView, setActiveView] = useState<"systemone" | "matrix" | "batch">("systemone");
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close model dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(e.target as Node)) {
+        setIsModelDropdownOpen(false);
+      }
+    }
+    if (isModelDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isModelDropdownOpen]);
+
   const [batchRawInput, setBatchRawInput] = useState(
     JSON.stringify(
       SAMPLE_TEMPLATES.map((t) => t.data),
@@ -136,19 +160,19 @@ export function LayaDashboard() {
     switch (boxId) {
       case "box_presets":
         return (
-          <div className="grid grid-cols-2 gap-2 h-full content-start">
+          <div className="grid grid-cols-1 gap-2 h-full content-start">
             {SAMPLE_TEMPLATES.map((tmpl, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => setTicketForm(tmpl.data)}
-                className="p-2.5 rounded-xl border border-outline-variant/20 bg-surface-container-low hover:bg-surface-container-high transition-all text-left cursor-pointer group"
+                className="trigger-card p-2.5 rounded-xl border border-outline-variant/20 bg-surface-container-low hover:bg-surface-container-high transition-all text-left cursor-pointer group min-w-0"
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-mono font-bold text-secondary uppercase">
+                <div className="flex items-center justify-between mb-1 gap-1">
+                  <span className="text-[10px] font-mono font-bold text-secondary uppercase truncate">
                     {tmpl.badge}
                   </span>
-                  <span className="text-[9px] font-mono text-on-surface-muted">#{tmpl.data.ticket_id}</span>
+                  <span className="text-[9px] font-mono text-on-surface-muted shrink-0">#{tmpl.data.ticket_id}</span>
                 </div>
                 <p className="text-xs font-bold text-on-surface truncate group-hover:text-primary transition-colors">
                   {tmpl.label}
@@ -217,7 +241,7 @@ export function LayaDashboard() {
                 <button
                   type="button"
                   onClick={() => setTriageMode("full")}
-                  className={`flex-1 py-1.5 text-xs font-mono font-bold rounded-lg border transition-all cursor-pointer ${
+                  className={`trigger-chip flex-1 py-1.5 text-xs font-mono font-bold rounded-lg border transition-all cursor-pointer ${
                     triageMode === "full"
                       ? "border-primary bg-primary/10 text-primary shadow-xs"
                       : "border-outline-variant/20 hover:bg-surface-container-low text-on-surface-muted"
@@ -228,7 +252,7 @@ export function LayaDashboard() {
                 <button
                   type="button"
                   onClick={() => setTriageMode("urgency_only")}
-                  className={`flex-1 py-1.5 text-xs font-mono font-bold rounded-lg border transition-all cursor-pointer ${
+                  className={`trigger-chip flex-1 py-1.5 text-xs font-mono font-bold rounded-lg border transition-all cursor-pointer ${
                     triageMode === "urgency_only"
                       ? "border-primary bg-primary/10 text-primary shadow-xs"
                       : "border-outline-variant/20 hover:bg-surface-container-low text-on-surface-muted"
@@ -242,7 +266,7 @@ export function LayaDashboard() {
                 type="button"
                 onClick={handleTriage}
                 disabled={isPending}
-                className="w-full py-2.5 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold tracking-wide uppercase transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-xs disabled:opacity-50"
+                className="trigger-btn w-full py-2.5 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold tracking-wide uppercase cursor-pointer shadow-xs disabled:opacity-50"
               >
                 {isPending ? "INFERRING TENSORS..." : "DISPATCH SYSTEM 1 TRIAGE (SUB-50MS)"}
               </button>
@@ -355,7 +379,7 @@ export function LayaDashboard() {
                       type="button"
                       disabled={isPending}
                       onClick={() => (isLoaded ? handleUnloadModel(name) : handleLoadModel(name))}
-                      className={`text-[10px] px-2.5 py-1 rounded-lg border font-mono font-bold cursor-pointer transition-colors ${
+                      className={`trigger-chip text-[10px] px-2.5 py-1 rounded-lg border font-mono font-bold cursor-pointer transition-colors ${
                         isLoaded
                           ? "border-rose-500/30 text-rose-700 bg-rose-500/10 hover:bg-rose-500/20"
                           : "border-primary/30 text-primary bg-primary/10 hover:bg-primary/20"
@@ -401,17 +425,21 @@ export function LayaDashboard() {
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono text-on-surface-muted">Raw Tensor Weights & Vectors</span>
               <button
+                type="button"
                 onClick={() => setShowRaw(!showRaw)}
-                className="text-xs font-mono font-bold text-primary hover:underline cursor-pointer"
+                className="trigger-chip text-xs font-mono font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
               >
-                {showRaw ? "[- COLLAPSE]" : "[+ EXPAND TREE]"}
+                <span>{showRaw ? "COLLAPSE TREE" : "EXPAND TREE"}</span>
+                <FiChevronDown className={`w-3.5 h-3.5 chevron-spin ${showRaw ? "rotated" : ""}`} />
               </button>
             </div>
-            {showRaw && (
-              <pre className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/20 text-xs font-mono text-on-surface overflow-x-auto max-h-72">
-                {JSON.stringify(triageResult.raw, null, 2)}
-              </pre>
-            )}
+            <div className={`box-accordion ${showRaw ? "" : "collapsed"}`}>
+              <div className="box-accordion-inner">
+                <pre className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/20 text-xs font-mono text-on-surface overflow-x-auto max-h-72 mt-1">
+                  {JSON.stringify(triageResult.raw, null, 2)}
+                </pre>
+              </div>
+            </div>
           </div>
         ) : (
           <p className="text-xs font-mono text-on-surface-muted">No raw vector telemetry recorded yet.</p>
@@ -423,17 +451,29 @@ export function LayaDashboard() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-4rem)] flex flex-col bg-surface font-sans text-on-surface">
+    <div className="w-full h-screen flex flex-col bg-surface font-sans text-on-surface overflow-hidden">
       {/* ========================================================= */}
       {/* 1. COMPACT TOP UNIFIED WORKBENCH HEADER                   */}
       {/* ========================================================= */}
       <header className="h-14 border-b border-outline-variant/20 bg-surface-container-lowest/80 backdrop-blur-md px-4 flex items-center justify-between gap-3 shrink-0 select-none">
         {/* Left: Sidebar Toggle & View Switcher */}
         <div className="flex items-center gap-2">
+          {onExitConsole && (
+            <button
+              type="button"
+              onClick={onExitConsole}
+              className="trigger-chip px-2.5 py-1.5 rounded-xl border border-primary/30 text-xs font-mono font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer flex items-center gap-1.5"
+              title="Return to Customer View"
+            >
+              <FiArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Customer View</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setShowLeftSidebar(!showLeftSidebar)}
-            className={`px-2.5 py-1.5 rounded-xl border text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`trigger-btn px-2.5 py-1.5 rounded-xl border text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 ${
               showLeftSidebar
                 ? "border-primary/40 bg-primary/10 text-primary font-bold shadow-xs"
                 : "border-outline-variant/30 text-on-surface-muted hover:text-on-surface hover:bg-surface-container-low"
@@ -447,19 +487,19 @@ export function LayaDashboard() {
           {/* View Switcher Quick Pills */}
           <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl border border-outline-variant/20 text-[11px] font-mono">
             <button
-              onClick={() => setActiveView("vscode")}
-              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeView === "vscode"
+              onClick={() => setActiveView("systemone")}
+              className={`trigger-btn px-3 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeView === "systemone"
                   ? "bg-surface-container-lowest text-primary shadow-xs border border-outline-variant/30"
                   : "text-on-surface-muted hover:text-on-surface"
               }`}
             >
-              <FiCpu className="w-3.5 h-3.5" />
-              <span>VS CODE AGENTIC PLAYGROUND</span>
+              <FiCpu className="w-3.5 h-3.5 text-primary" />
+              <span>SYS 1 // AGENTIC IDE</span>
             </button>
             <button
               onClick={() => setActiveView("matrix")}
-              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`trigger-btn px-3 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeView === "matrix"
                   ? "bg-surface-container-lowest text-primary shadow-xs border border-outline-variant/30"
                   : "text-on-surface-muted hover:text-on-surface"
@@ -470,41 +510,62 @@ export function LayaDashboard() {
             </button>
             <button
               onClick={() => setActiveView("batch")}
-              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer hidden md:flex items-center gap-1.5 ${
+              className={`trigger-btn px-3 py-1 rounded-lg font-bold transition-all cursor-pointer hidden md:flex items-center gap-1.5 ${
                 activeView === "batch"
                   ? "bg-surface-container-lowest text-primary shadow-xs border border-outline-variant/30"
                   : "text-on-surface-muted hover:text-on-surface"
               }`}
             >
               <FiLayers className="w-3.5 h-3.5" />
-              <span>BATCH</span>
-            </button>
-            <button
-              onClick={() => setActiveView("systemone")}
-              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer hidden md:flex items-center gap-1.5 ${
-                activeView === "systemone"
-                  ? "bg-surface-container-lowest text-primary shadow-xs border border-outline-variant/30"
-                  : "text-on-surface-muted hover:text-on-surface"
-              }`}
-            >
-              <FiActivity className="w-3.5 h-3.5" />
-              <span>SYS 1</span>
+              <span>BATCH STREAM</span>
             </button>
           </div>
         </div>
 
-        {/* Center: Model Target Quick Selector */}
-        <div className="hidden lg:flex items-center gap-2 text-xs font-mono text-on-surface-muted">
-          <span className="text-[10px] font-bold uppercase">Target Inference Model:</span>
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            className="px-2.5 py-1 rounded-xl bg-surface-container-low border border-outline-variant/30 text-xs font-mono font-bold text-on-surface focus:outline-none"
+        {/* Center: Model Target Quick Selector with Animated Dropdown */}
+        <div ref={modelDropdownRef} className="hidden lg:flex items-center gap-2 text-xs font-mono text-on-surface-muted relative">
+          <span className="text-[10px] font-bold uppercase">Target Model:</span>
+          <button
+            type="button"
+            onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+            className="trigger-chip flex items-center gap-2 px-3 py-1 rounded-xl bg-surface-container-low border border-outline-variant/30 text-xs font-mono font-bold text-on-surface hover:bg-surface-container-high transition-all shadow-xs cursor-pointer"
           >
-            <option value="english">convai/laya:english (110M)</option>
-            <option value="multilingual">convai/laya:multilingual</option>
-            <option value="typed-decisions">convai/laya:typed-decisions</option>
-          </select>
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span>{selectedModel}</span>
+            <FiChevronDown className={`w-3.5 h-3.5 text-on-surface-muted chevron-spin ${isModelDropdownOpen ? "rotated" : ""}`} />
+          </button>
+
+          {isModelDropdownOpen && (
+            <div className="dropdown-animated absolute top-full left-20 mt-1.5 w-64 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest/95 shadow-2xl z-50 p-2 space-y-1 backdrop-blur-md">
+              {[
+                { id: "english", label: "convai/laya:english", desc: "110M params • FastCPU optimized", badge: "DEFAULT" },
+                { id: "multilingual", label: "convai/laya:multilingual", desc: "100+ languages supported", badge: "GLOBAL" },
+                { id: "typed-decisions", label: "convai/laya:typed-decisions", desc: "Multi-head typed classification", badge: "CALIBRATED" },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedModel(m.id);
+                    setIsModelDropdownOpen(false);
+                  }}
+                  className={`trigger-chip w-full flex items-center justify-between p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                    selectedModel === m.id
+                      ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
+                      : "border-outline-variant/15 text-on-surface hover:bg-surface-container-low"
+                  }`}
+                >
+                  <div className="min-w-0 pr-1">
+                    <p className="text-[11px] truncate">{m.label}</p>
+                    <p className="text-[9px] text-on-surface-muted truncate">{m.desc}</p>
+                  </div>
+                  <span className="text-[8px] font-mono px-1 py-0.5 rounded border border-outline-variant/30 text-on-surface-muted shrink-0">
+                    {m.badge}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right: Right Sidebar Toggle & Actions */}
@@ -518,7 +579,7 @@ export function LayaDashboard() {
           <button
             type="button"
             onClick={() => setShowRightSidebar(!showRightSidebar)}
-            className={`px-2.5 py-1.5 rounded-xl border text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`trigger-btn px-2.5 py-1.5 rounded-xl border text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 ${
               showRightSidebar
                 ? "border-primary/40 bg-primary/10 text-primary font-bold shadow-xs"
                 : "border-outline-variant/30 text-on-surface-muted hover:text-on-surface hover:bg-surface-container-low"
@@ -533,11 +594,23 @@ export function LayaDashboard() {
 
           <Link
             href="/settings"
-            className="p-2 rounded-xl border border-outline-variant/30 hover:bg-surface-container-low text-on-surface transition-colors cursor-pointer"
+            className="trigger-btn p-2 rounded-xl border border-outline-variant/30 hover:bg-surface-container-low text-on-surface transition-colors cursor-pointer"
             title="System Settings"
           >
             <FiSettings className="w-4 h-4" />
           </Link>
+
+          {Boolean(session) && (
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="trigger-btn text-xs px-2.5 py-1.5 rounded-xl border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container-high text-on-surface font-mono transition-colors cursor-pointer"
+                title="Sign out of Gurp"
+              >
+                Sign out
+              </button>
+            </form>
+          )}
         </div>
       </header>
 
@@ -559,10 +632,16 @@ export function LayaDashboard() {
       {/* ========================================================= */}
       <div className="flex-1 flex overflow-hidden">
         {/* 2A. LEFT WORKBENCH SIDEBAR */}
-        {showLeftSidebar && (
-          <aside className="w-64 border-r border-outline-variant/20 bg-surface-container-lowest flex flex-col shrink-0 select-none animate-fadeIn transition-all duration-200">
+        <aside
+          className={`sidebar-panel flex flex-col shrink-0 select-none bg-surface-container-lowest border-outline-variant/20 overflow-hidden ${
+            showLeftSidebar
+              ? "w-64 max-w-64 opacity-100 translate-x-0 border-r"
+              : "w-0 max-w-0 opacity-0 -translate-x-12 border-r-0 pointer-events-none"
+          }`}
+        >
+          <div className="w-64 flex flex-col h-full overflow-hidden">
             {/* Sidebar Title */}
-            <div className="p-3 border-b border-outline-variant/15 flex items-center justify-between text-[11px] font-mono font-bold text-on-surface-muted uppercase">
+            <div className="p-3 border-b border-outline-variant/15 flex items-center justify-between text-[11px] font-mono font-bold text-on-surface-muted uppercase shrink-0">
               <div className="flex items-center gap-1.5">
                 <FiSidebar className="w-3.5 h-3.5 text-primary" />
                 <span>WORKBENCH CONTROLS</span>
@@ -570,7 +649,7 @@ export function LayaDashboard() {
               <button
                 type="button"
                 onClick={() => setShowLeftSidebar(false)}
-                className="text-on-surface-muted hover:text-on-surface p-1 rounded hover:bg-surface-container-low cursor-pointer"
+                className="trigger-btn text-on-surface-muted hover:text-on-surface p-1 rounded hover:bg-surface-container-low cursor-pointer"
                 title="Collapse sidebar"
               >
                 <FiChevronLeft className="w-3.5 h-3.5" />
@@ -587,26 +666,26 @@ export function LayaDashboard() {
                   <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                     <button
                       onClick={() => applyPreset("compact")}
-                      className="px-2 py-1.5 rounded-lg border border-outline-variant/25 text-on-surface-muted hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer text-center font-bold"
+                      className="trigger-chip px-2 py-1.5 rounded-lg border border-outline-variant/25 text-on-surface-muted hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer text-center font-bold"
                     >
                       [COMPACT]
                     </button>
                     <button
                       onClick={() => applyPreset("widescreen")}
-                      className="px-2 py-1.5 rounded-lg border border-outline-variant/25 text-on-surface-muted hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer text-center font-bold"
+                      className="trigger-chip px-2 py-1.5 rounded-lg border border-outline-variant/25 text-on-surface-muted hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer text-center font-bold"
                     >
                       [WIDE]
                     </button>
                   </div>
                   <button
                     onClick={autoAdjustWidths}
-                    className="w-full py-1.5 rounded-lg border border-primary/30 text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer text-center font-bold text-[10px]"
+                    className="trigger-btn w-full py-1.5 rounded-lg border border-primary/30 text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer text-center font-bold text-[10px]"
                   >
                     [AUTO-ADJUST 12-COLS]
                   </button>
                   <button
                     onClick={resetLayout}
-                    className="w-full py-1.5 rounded-lg border border-outline-variant/25 text-on-surface-muted hover:text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer text-center font-bold text-[10px]"
+                    className="trigger-btn w-full py-1.5 rounded-lg border border-outline-variant/25 text-on-surface-muted hover:text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer text-center font-bold text-[10px]"
                   >
                     [RESET TO DEFAULT]
                   </button>
@@ -624,7 +703,7 @@ export function LayaDashboard() {
                       key={idx}
                       type="button"
                       onClick={() => setTicketForm(tmpl.data)}
-                      className="w-full p-2 rounded-xl border border-outline-variant/20 bg-surface-container-low hover:bg-surface-container-high transition-all text-left cursor-pointer group"
+                      className="trigger-card w-full p-2 rounded-xl border border-outline-variant/20 bg-surface-container-low hover:bg-surface-container-high transition-all text-left cursor-pointer group"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[9px] font-bold text-secondary uppercase">
@@ -669,12 +748,12 @@ export function LayaDashboard() {
                 </div>
               </div>
             </div>
-          </aside>
-        )}
+          </div>
+        </aside>
 
         {/* 2B. CENTER MAIN WORKSPACE */}
-        <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 transition-all duration-200">
-          {activeView === "vscode" && (
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6 transition-all duration-200">
+          {activeView === "systemone" && (
             <VSCodeAgenticPlayground onSwitchToGrid={() => setActiveView("matrix")} />
           )}
 
@@ -726,7 +805,7 @@ export function LayaDashboard() {
                       }
                     }}
                     disabled={isPending}
-                    className="py-1.5 px-4 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold cursor-pointer"
+                    className="trigger-btn py-1.5 px-4 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold cursor-pointer"
                   >
                     {isPending ? "RUNNING BATCH..." : "EXECUTE BATCH INFERENCE"}
                   </button>
@@ -785,55 +864,17 @@ export function LayaDashboard() {
               </div>
             </div>
           )}
-
-          {activeView === "systemone" && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-4 border border-outline-variant/30 rounded-2xl bg-surface-container-lowest p-4 space-y-2 shadow-xs">
-                <span className="text-xs font-mono font-bold text-on-surface uppercase">[BOX S1 // STATE JSON]</span>
-                <textarea
-                  rows={12}
-                  value={sysStateJson}
-                  onChange={(e) => setSysStateJson(e.target.value)}
-                  className="w-full p-3 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none"
-                />
-              </div>
-
-              <div className="lg:col-span-4 border border-outline-variant/30 rounded-2xl bg-surface-container-lowest p-4 space-y-2 shadow-xs">
-                <span className="text-xs font-mono font-bold text-on-surface uppercase">[BOX S2 // QUESTIONS JSON]</span>
-                <textarea
-                  rows={12}
-                  value={sysQuestionsJson}
-                  onChange={(e) => setSysQuestionsJson(e.target.value)}
-                  className="w-full p-3 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface focus:outline-none"
-                />
-                <button
-                  onClick={handleRunSystemOne}
-                  disabled={isPending}
-                  className="w-full py-2.5 rounded-xl btn-primary-gradient text-on-primary font-mono text-xs font-bold cursor-pointer"
-                >
-                  EXECUTE SYSTEM 1
-                </button>
-              </div>
-
-              <div className="lg:col-span-4 border border-outline-variant/30 rounded-2xl bg-surface-container-lowest p-4 space-y-2 shadow-xs">
-                <span className="text-xs font-mono font-bold text-on-surface uppercase">[BOX S3 // RAW INFERENCE OUTPUT]</span>
-                {systemOneResult ? (
-                  <pre className="p-3 font-mono text-xs rounded-xl bg-surface-container-low border border-outline-variant/25 text-on-surface max-h-[320px] overflow-auto">
-                    {JSON.stringify(systemOneResult, null, 2)}
-                  </pre>
-                ) : (
-                  <div className="p-16 text-center text-xs font-mono text-on-surface-muted border border-dashed border-outline-variant/30 rounded-xl">
-                    Ready for System 1 execution.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </main>
 
         {/* 2C. RIGHT TELEMETRY & DECISION SIDEBAR */}
-        {showRightSidebar && (
-          <aside className="w-72 border-l border-outline-variant/20 bg-surface-container-lowest flex flex-col shrink-0 select-none animate-fadeIn transition-all duration-200 overflow-y-auto p-4 space-y-4 font-mono text-xs">
+        <aside
+          className={`sidebar-panel flex flex-col shrink-0 select-none bg-surface-container-lowest border-outline-variant/20 overflow-hidden ${
+            showRightSidebar
+              ? "w-72 max-w-72 opacity-100 translate-x-0 border-l"
+              : "w-0 max-w-0 opacity-0 translate-x-12 border-l-0 pointer-events-none"
+          }`}
+        >
+          <div className="w-72 flex flex-col h-full overflow-y-auto p-4 space-y-4 font-mono text-xs">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2 text-[11px] font-bold text-on-surface-muted uppercase">
               <div className="flex items-center gap-1.5">
@@ -845,7 +886,7 @@ export function LayaDashboard() {
                   type="button"
                   onClick={refreshHealth}
                   disabled={isPending}
-                  className="p-1 rounded hover:bg-surface-container-low text-primary cursor-pointer transition-colors"
+                  className="trigger-btn p-1 rounded hover:bg-surface-container-low text-primary cursor-pointer transition-colors"
                   title="Refresh Engine Heartbeat"
                 >
                   <FiRefreshCw className={`w-3.5 h-3.5 ${isPending ? "animate-spin" : ""}`} />
@@ -853,7 +894,7 @@ export function LayaDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowRightSidebar(false)}
-                  className="text-on-surface-muted hover:text-on-surface p-1 rounded hover:bg-surface-container-low cursor-pointer"
+                  className="trigger-btn text-on-surface-muted hover:text-on-surface p-1 rounded hover:bg-surface-container-low cursor-pointer"
                   title="Collapse sidebar"
                 >
                   <FiChevronRight className="w-3.5 h-3.5" />
@@ -922,8 +963,8 @@ export function LayaDashboard() {
                 </div>
               </div>
             )}
-          </aside>
-        )}
+          </div>
+        </aside>
       </div>
     </div>
   );

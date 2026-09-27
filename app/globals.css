@@ -161,12 +161,12 @@ html {
 }
 
 .trigger-btn:hover {
-  transform: translateY(-1.5px) scale(1.015);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 25%, transparent);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 
 .trigger-btn:active {
-  transform: translateY(0.5px) scale(0.975);
+  transform: translateY(1px) scale(0.975);
 }
 
 .trigger-btn::after {
@@ -179,7 +179,7 @@ html {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.22),
+    rgba(255, 255, 255, 0.35),
     transparent
   );
   transform: skewX(-20deg);
@@ -191,6 +191,36 @@ html {
   transition: left 0.65s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Tactile Chip Trigger */
+.trigger-chip {
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trigger-chip:hover {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.trigger-chip:active {
+  transform: scale(0.96);
+}
+
+/* Interactive Card Elevation */
+.trigger-card {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trigger-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.08);
+}
+
+.trigger-card:active {
+  transform: translateY(0);
+}
+
+/* Radar Ping Ripple */
 @keyframes radar-ripple {
   0% {
     transform: scale(0.9);
@@ -216,6 +246,20 @@ html {
   pointer-events: none;
 }
 
+/* Radiant Trigger Glow */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px color-mix(in srgb, var(--primary) 35%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 22px color-mix(in srgb, var(--primary) 65%, transparent);
+  }
+}
+
+.trigger-glow {
+  animation: pulse-glow 2.4s ease-in-out infinite;
+}
+
 @keyframes subtle-float {
   0%, 100% {
     transform: translateY(0);
@@ -227,5 +271,86 @@ html {
 
 .animate-subtle-float {
   animation: subtle-float 2.4s ease-in-out infinite;
+}
+
+/* ========================================================= */
+/* SIDEBAR, BOX HIDE & DROPDOWN ANIMATIONS                  */
+/* ========================================================= */
+
+/* Sidebar smooth collapse/expand */
+.sidebar-panel {
+  transition: width 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.28s ease,
+              max-width 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: width, transform, opacity;
+}
+
+/* Dropdown Menu Entrance with spring bounce */
+@keyframes dropdown-entrance {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  70% {
+    transform: translateY(2px) scale(1.008);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-animated {
+  animation: dropdown-entrance 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top center;
+}
+
+/* Box Collapsible Accordion Grid transition */
+.box-accordion {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease;
+}
+
+.box-accordion.collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.box-accordion-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Smooth Chevron Spin */
+.chevron-spin {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chevron-spin.rotated {
+  transform: rotate(180deg);
+}
+
+.chevron-spin.rotated-90 {
+  transform: rotate(90deg);
+}
+
+/* Smooth Tab Transition Fade */
+@keyframes tab-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-tab-fade {
+  animation: tab-fade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 

@@ -174,6 +174,8 @@ export function VSCodeAgenticPlayground({ onSwitchToGrid }: VSCodeAgenticPlaygro
   const [cliInput, setCliInput] = useState("");
   const [promptInput, setPromptInput] = useState("");
   const [copied, setCopied] = useState(false);
+  const [isStatesOpen, setIsStatesOpen] = useState(true);
+  const [isHeadsOpen, setIsHeadsOpen] = useState(true);
 
   const handleSelectScenario = (sc: ScenarioState) => {
     setSelectedState(sc);
@@ -593,68 +595,88 @@ export function VSCodeAgenticPlayground({ onSwitchToGrid }: VSCodeAgenticPlaygro
           <div className="p-2 space-y-3 overflow-y-auto flex-1">
             {/* Incident States */}
             <div>
-              <div className="flex items-center gap-1 px-1 py-1 text-[10px] font-bold text-on-surface-muted">
-                <FiChevronDown className="w-3 h-3" />
-                <span>STATE_PAYLOADS ({states.length})</span>
-              </div>
-              <div className="mt-1 space-y-1 pl-1">
-                {states.map((sc) => {
-                  const isSelected = sc.id === selectedState.id;
-                  return (
-                    <button
-                      key={sc.id}
-                      type="button"
-                      onClick={() => handleSelectScenario(sc)}
-                      className={`trigger-btn w-full flex items-center justify-between p-2 rounded-xl text-left text-[11px] transition-all cursor-pointer group ${
-                        isSelected
-                          ? "bg-primary/15 text-primary font-bold shadow-xs border border-primary/25"
-                          : "text-on-surface hover:bg-surface-container-low border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5 truncate">
-                        <FiFileText className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-primary" : "text-on-surface-muted"}`} />
-                        <span className="truncate">{sc.name.replace(".state.json", "")}</span>
-                      </div>
-                      <span className={`text-[8px] px-1 py-0.2 rounded border font-mono shrink-0 ${sc.priorityBadge}`}>
-                        {sc.badge.split(" ")[0]}
-                      </span>
-                    </button>
-                  );
-                })}
+              <button
+                type="button"
+                onClick={() => setIsStatesOpen(!isStatesOpen)}
+                className="w-full flex items-center justify-between px-1 py-1 text-[10px] font-bold text-on-surface-muted hover:text-on-surface transition-colors cursor-pointer select-none"
+              >
+                <div className="flex items-center gap-1">
+                  <FiChevronDown className={`w-3 h-3 chevron-spin ${isStatesOpen ? "" : "-rotate-90"}`} />
+                  <span>STATE_PAYLOADS ({states.length})</span>
+                </div>
+              </button>
+              <div className={`box-accordion ${isStatesOpen ? "" : "collapsed"}`}>
+                <div className="box-accordion-inner">
+                  <div className="mt-1 space-y-1 pl-1">
+                    {states.map((sc) => {
+                      const isSelected = sc.id === selectedState.id;
+                      return (
+                        <button
+                          key={sc.id}
+                          type="button"
+                          onClick={() => handleSelectScenario(sc)}
+                          className={`trigger-btn w-full flex items-center justify-between p-2 rounded-xl text-left text-[11px] transition-all cursor-pointer group ${
+                            isSelected
+                              ? "bg-primary/15 text-primary font-bold shadow-xs border border-primary/25"
+                              : "text-on-surface hover:bg-surface-container-low border border-transparent"
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5 truncate">
+                            <FiFileText className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-primary" : "text-on-surface-muted"}`} />
+                            <span className="truncate">{sc.name.replace(".state.json", "")}</span>
+                          </div>
+                          <span className={`text-[8px] px-1 py-0.2 rounded border font-mono shrink-0 ${sc.priorityBadge}`}>
+                            {sc.badge.split(" ")[0]}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Questions Schemas */}
             <div>
-              <div className="flex items-center gap-1 px-1 py-1 text-[10px] font-bold text-on-surface-muted">
-                <FiChevronDown className="w-3 h-3" />
-                <span>DECISION_HEADS (3)</span>
-              </div>
-              <div className="mt-1 space-y-1 pl-2 text-[10px]">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("questions")}
-                  className="w-full flex items-center gap-1.5 p-1.5 rounded-lg text-left hover:bg-surface-container-low cursor-pointer transition-colors"
-                >
-                  <FiCode className="w-3 h-3 text-primary" />
-                  <span className="text-on-surface truncate">assigned_queue.json</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("questions")}
-                  className="w-full flex items-center gap-1.5 p-1.5 rounded-lg text-left hover:bg-surface-container-low cursor-pointer transition-colors"
-                >
-                  <FiCode className="w-3 h-3 text-secondary" />
-                  <span className="text-on-surface truncate">urgency_rating.json</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("questions")}
-                  className="w-full flex items-center gap-1.5 p-1.5 rounded-lg text-left hover:bg-surface-container-low cursor-pointer transition-colors"
-                >
-                  <FiCode className="w-3 h-3 text-emerald-700" />
-                  <span className="text-on-surface truncate">churn_risk.json</span>
-                </button>
+              <button
+                type="button"
+                onClick={() => setIsHeadsOpen(!isHeadsOpen)}
+                className="w-full flex items-center justify-between px-1 py-1 text-[10px] font-bold text-on-surface-muted hover:text-on-surface transition-colors cursor-pointer select-none"
+              >
+                <div className="flex items-center gap-1">
+                  <FiChevronDown className={`w-3 h-3 chevron-spin ${isHeadsOpen ? "" : "-rotate-90"}`} />
+                  <span>DECISION_HEADS (3)</span>
+                </div>
+              </button>
+              <div className={`box-accordion ${isHeadsOpen ? "" : "collapsed"}`}>
+                <div className="box-accordion-inner">
+                  <div className="mt-1 space-y-1 pl-2 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("questions")}
+                      className="trigger-chip w-full flex items-center gap-1.5 p-1.5 rounded-lg text-left hover:bg-surface-container-low cursor-pointer transition-colors"
+                    >
+                      <FiCode className="w-3 h-3 text-primary" />
+                      <span className="text-on-surface truncate">assigned_queue.json</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("questions")}
+                      className="trigger-chip w-full flex items-center gap-1.5 p-1.5 rounded-lg text-left hover:bg-surface-container-low cursor-pointer transition-colors"
+                    >
+                      <FiCode className="w-3 h-3 text-secondary" />
+                      <span className="text-on-surface truncate">urgency_rating.json</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("questions")}
+                      className="trigger-chip w-full flex items-center gap-1.5 p-1.5 rounded-lg text-left hover:bg-surface-container-low cursor-pointer transition-colors"
+                    >
+                      <FiCode className="w-3 h-3 text-emerald-700" />
+                      <span className="text-on-surface truncate">churn_risk.json</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -724,9 +746,15 @@ export function VSCodeAgenticPlayground({ onSwitchToGrid }: VSCodeAgenticPlaygro
                 type="button"
                 onClick={() => executeSystemOne()}
                 disabled={isExecuting}
-                className="trigger-btn px-4 py-1.5 rounded-xl btn-primary-gradient text-on-primary font-mono font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className={`trigger-btn px-4 py-1.5 rounded-xl btn-primary-gradient text-on-primary font-mono font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50 ${
+                  isExecuting ? "radar-ripple" : "trigger-glow"
+                }`}
               >
-                <FiPlay className="w-3.5 h-3.5 fill-current" />
+                {isExecuting ? (
+                  <FiZap className="w-3.5 h-3.5 text-amber-300 animate-bounce" />
+                ) : (
+                  <FiPlay className="w-3.5 h-3.5 fill-current" />
+                )}
                 <span>{isExecuting ? "INFERRING TENSORS..." : "EXECUTE SYSTEM 1"}</span>
               </button>
             </div>
@@ -956,8 +984,8 @@ export function VSCodeAgenticPlayground({ onSwitchToGrid }: VSCodeAgenticPlaygro
             <button
               type="button"
               onClick={() => setActiveTerminalTab("terminal")}
-              className={`font-bold transition-colors cursor-pointer ${
-                activeTerminalTab === "terminal" ? "text-primary border-b-2 border-primary" : "text-on-surface-muted"
+              className={`trigger-chip px-2 py-0.5 rounded-lg font-bold transition-colors cursor-pointer ${
+                activeTerminalTab === "terminal" ? "text-primary bg-primary/10 border-b-2 border-primary" : "text-on-surface-muted hover:text-on-surface"
               }`}
             >
               TERMINAL: LAYA-SYSTEM1 REPL
@@ -965,8 +993,8 @@ export function VSCodeAgenticPlayground({ onSwitchToGrid }: VSCodeAgenticPlaygro
             <button
               type="button"
               onClick={() => setActiveTerminalTab("probabilities")}
-              className={`font-bold transition-colors cursor-pointer ${
-                activeTerminalTab === "probabilities" ? "text-primary border-b-2 border-primary" : "text-on-surface-muted"
+              className={`trigger-chip px-2 py-0.5 rounded-lg font-bold transition-colors cursor-pointer ${
+                activeTerminalTab === "probabilities" ? "text-primary bg-primary/10 border-b-2 border-primary" : "text-on-surface-muted hover:text-on-surface"
               }`}
             >
               HEAD PROBABILITIES
@@ -974,8 +1002,8 @@ export function VSCodeAgenticPlayground({ onSwitchToGrid }: VSCodeAgenticPlaygro
             <button
               type="button"
               onClick={() => setActiveTerminalTab("tokens")}
-              className={`font-bold transition-colors cursor-pointer ${
-                activeTerminalTab === "tokens" ? "text-primary border-b-2 border-primary" : "text-on-surface-muted"
+              className={`trigger-chip px-2 py-0.5 rounded-lg font-bold transition-colors cursor-pointer ${
+                activeTerminalTab === "tokens" ? "text-primary bg-primary/10 border-b-2 border-primary" : "text-on-surface-muted hover:text-on-surface"
               }`}
             >
               FASTCPU TELEMETRY
@@ -986,21 +1014,21 @@ export function VSCodeAgenticPlayground({ onSwitchToGrid }: VSCodeAgenticPlaygro
             <button
               type="button"
               onClick={() => executeSystemOne()}
-              className="trigger-btn px-2 py-0.5 rounded bg-surface-container-lowest border border-outline-variant/20 hover:text-primary transition-colors cursor-pointer"
+              className="trigger-chip px-2 py-0.5 rounded bg-surface-container-lowest border border-outline-variant/20 hover:text-primary transition-colors cursor-pointer font-bold"
             >
               [RUN SYS1]
             </button>
             <button
               type="button"
               onClick={() => setTerminalLogs([])}
-              className="trigger-btn px-2 py-0.5 rounded bg-surface-container-lowest border border-outline-variant/20 hover:text-rose-600 transition-colors cursor-pointer"
+              className="trigger-chip px-2 py-0.5 rounded bg-surface-container-lowest border border-outline-variant/20 hover:text-rose-600 transition-colors cursor-pointer font-bold"
             >
               [CLEAR]
             </button>
             <button
               type="button"
               onClick={handleCopyResult}
-              className="trigger-btn flex items-center gap-1 text-on-surface-muted hover:text-primary transition-colors cursor-pointer"
+              className="trigger-chip flex items-center gap-1 text-on-surface-muted hover:text-primary transition-colors cursor-pointer font-bold"
             >
               <FiCopy className="w-3 h-3" />
               <span>{copied ? "COPIED" : "COPY"}</span>
@@ -1008,39 +1036,93 @@ export function VSCodeAgenticPlayground({ onSwitchToGrid }: VSCodeAgenticPlaygro
           </div>
         </div>
 
-        {/* Terminal Log Stream */}
-        <div className="flex-1 p-2.5 overflow-y-auto font-mono text-[11px] space-y-1 bg-surface-container-lowest text-on-surface-muted leading-relaxed">
-          {terminalLogs.map((log, i) => (
-            <p
-              key={i}
-              className={
-                log.includes("COMPLETE") || log.includes("READY") || log.includes("PASS")
-                  ? "text-emerald-700 font-semibold"
-                  : log.includes("FORWARD") || log.includes("DISPATCH")
-                    ? "text-primary font-semibold"
-                    : log.includes("INGEST")
-                      ? "text-secondary"
-                      : log.startsWith("gurp@")
-                        ? "text-on-surface font-bold"
-                        : "text-on-surface-muted"
-              }
-            >
-              {log}
-            </p>
-          ))}
-        </div>
+        {/* Dynamic Terminal Body */}
+        {activeTerminalTab === "terminal" && (
+          <>
+            <div className="flex-1 p-2.5 overflow-y-auto font-mono text-[11px] space-y-1 bg-surface-container-lowest text-on-surface-muted leading-relaxed">
+              {terminalLogs.map((log, i) => (
+                <p
+                  key={i}
+                  className={
+                    log.includes("COMPLETE") || log.includes("READY") || log.includes("PASS")
+                      ? "text-emerald-700 font-semibold"
+                      : log.includes("FORWARD") || log.includes("DISPATCH")
+                        ? "text-primary font-semibold"
+                        : log.includes("INGEST")
+                          ? "text-secondary"
+                          : log.startsWith("gurp@")
+                            ? "text-on-surface font-bold"
+                            : "text-on-surface-muted"
+                  }
+                >
+                  {log}
+                </p>
+              ))}
+            </div>
 
-        {/* Interactive CLI Input Line */}
-        <form onSubmit={handleCliSubmit} className="h-8 border-t border-outline-variant/15 px-3 flex items-center gap-2 bg-surface-container-lowest">
-          <span className="text-primary font-bold text-[11px]">gurp@sys1:~$</span>
-          <input
-            type="text"
-            value={cliInput}
-            onChange={(e) => setCliInput(e.target.value)}
-            placeholder="Type 'sys1 run', 'health', 'models', 'clear', 'help'..."
-            className="flex-1 bg-transparent border-none outline-none text-xs font-mono text-on-surface placeholder:text-on-surface-muted/60"
-          />
-        </form>
+            <form onSubmit={handleCliSubmit} className="h-8 border-t border-outline-variant/15 px-3 flex items-center gap-2 bg-surface-container-lowest">
+              <span className="text-primary font-bold text-[11px]">gurp@sys1:~$</span>
+              <input
+                type="text"
+                value={cliInput}
+                onChange={(e) => setCliInput(e.target.value)}
+                placeholder="Type 'sys1 run', 'health', 'models', 'clear', 'help'..."
+                className="flex-1 bg-transparent border-none outline-none text-xs font-mono text-on-surface placeholder:text-on-surface-muted/60"
+              />
+            </form>
+          </>
+        )}
+
+        {activeTerminalTab === "probabilities" && (
+          <div className="flex-1 p-3 overflow-y-auto bg-surface-container-lowest space-y-3 font-mono text-xs">
+            <div>
+              <span className="text-[10px] font-bold text-on-surface-muted uppercase block mb-1">
+                assigned_queue Softmax Probability Distribution
+              </span>
+              <div className="space-y-1.5">
+                {[
+                  { label: "ENG-INFRA", prob: activeOutput.answers?.assigned_queue?.choice === "ENG-INFRA" ? 0.984 : 0.005, color: "bg-primary" },
+                  { label: "FIN-REV", prob: activeOutput.answers?.assigned_queue?.choice === "FIN-REV" ? 0.978 : 0.012, color: "bg-emerald-500" },
+                  { label: "SEC-OPS", prob: activeOutput.answers?.assigned_queue?.choice === "SEC-OPS" ? 0.989 : 0.003, color: "bg-rose-500" },
+                  { label: "CUST-SUPP", prob: activeOutput.answers?.assigned_queue?.choice === "CUST-SUPP" ? 0.978 : 0.001, color: "bg-sky-500" },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-[10px]">
+                    <span className="w-20 font-bold text-on-surface">{item.label}</span>
+                    <div className="flex-1 h-3 bg-surface-container-low rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${item.color} transition-all duration-500`}
+                        style={{ width: `${Math.round(item.prob * 100)}%` }}
+                      />
+                    </div>
+                    <span className="w-12 text-right font-bold text-on-surface-muted">
+                      {Math.round(item.prob * 100)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTerminalTab === "tokens" && (
+          <div className="flex-1 p-3 overflow-y-auto bg-surface-container-lowest grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+            <div className="p-2.5 rounded-xl border border-outline-variant/20 bg-surface-container-low">
+              <span className="text-[10px] text-on-surface-muted uppercase font-bold block">FastCPU Cache</span>
+              <p className="text-sm font-bold text-primary mt-1">248 MB Resident</p>
+              <p className="text-[10px] text-on-surface-muted mt-0.5">Non-autoregressive zero-copy RAM</p>
+            </div>
+            <div className="p-2.5 rounded-xl border border-outline-variant/20 bg-surface-container-low">
+              <span className="text-[10px] text-on-surface-muted uppercase font-bold block">Single Pass Latency</span>
+              <p className="text-sm font-bold text-emerald-700 mt-1">{latencyMs} ms</p>
+              <p className="text-[10px] text-on-surface-muted mt-0.5">Target SLA: &lt;50ms (PASS)</p>
+            </div>
+            <div className="p-2.5 rounded-xl border border-outline-variant/20 bg-surface-container-low">
+              <span className="text-[10px] text-on-surface-muted uppercase font-bold block">Model Architecture</span>
+              <p className="text-sm font-bold text-secondary mt-1">ModernBERT-110M</p>
+              <p className="text-[10px] text-on-surface-muted mt-0.5">AVX-512 Vectorized Softmax</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ========================================================= */}

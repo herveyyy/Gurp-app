@@ -27,7 +27,7 @@ export function ThemeSelector() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-2.5 py-1 rounded-lg border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container-high transition-all text-[11px] font-mono font-bold text-on-surface cursor-pointer shadow-xs"
+        className="trigger-chip flex items-center gap-2 px-2.5 py-1 rounded-xl border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container-high transition-all text-[11px] font-mono font-bold text-on-surface cursor-pointer shadow-xs"
         title="Change application color theme"
       >
         <span
@@ -40,11 +40,11 @@ export function ThemeSelector() {
         <span className="truncate max-w-[130px] sm:max-w-none">
           {activePreset.label}
         </span>
-        <FiChevronDown className="w-3 h-3 text-on-surface-muted" />
+        <FiChevronDown className={`w-3 h-3 text-on-surface-muted chevron-spin ${isOpen ? "rotated" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1.5 w-72 sm:w-80 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-50 p-2.5 space-y-1.5 animate-fadeIn backdrop-blur-md">
+        <div className="dropdown-animated absolute right-0 mt-1.5 w-72 sm:w-80 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest/95 shadow-2xl z-50 p-2.5 space-y-1.5 backdrop-blur-md">
           <div className="flex items-center justify-between px-2 py-1 border-b border-outline-variant/20 mb-1">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-muted">
               Select Color Theme
@@ -54,7 +54,7 @@ export function ThemeSelector() {
                 resetTheme();
                 setIsOpen(false);
               }}
-              className="text-[9px] font-mono font-bold text-primary hover:underline cursor-pointer"
+              className="trigger-chip text-[9px] font-mono font-bold text-primary hover:underline cursor-pointer"
             >
               [RESET DEFAULT]
             </button>
@@ -72,7 +72,7 @@ export function ThemeSelector() {
                     selectPreset(preset.id);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer group ${
+                  className={`trigger-chip w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer group ${
                     isSelected
                       ? "border-primary bg-primary/10 shadow-xs"
                       : "border-outline-variant/20 hover:border-outline-variant/40 hover:bg-surface-container-low"

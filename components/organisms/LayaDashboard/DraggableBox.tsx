@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { FiMaximize2, FiMinimize2, FiChevronDown, FiChevronUp } from "react-icons/fi";
 
 export interface BoxConfig {
   id: string;
@@ -169,10 +170,10 @@ export function DraggableBox({
       onDrop={(e) => onDrop(e, id)}
       onDragEnd={onDragEnd}
       style={{
-        gridColumn: `span ${activeColSpan} / span ${activeColSpan}`,
+        gridColumn: `span ${activeColSpan}`,
         minHeight: minimized ? "auto" : activeHeight ? `${activeHeight}px` : undefined,
       }}
-      className={`col-span-12 ${colClass} relative flex flex-col rounded-2xl border bg-surface-container-lowest transition-[grid-column,border,box-shadow] duration-150 select-none shadow-xs group ${
+      className={`min-w-0 col-span-12 ${colClass} relative flex flex-col rounded-2xl border bg-surface-container-lowest transition-[grid-column,border,box-shadow] duration-150 select-none shadow-xs group ${
         isDraggingCurrent
           ? "opacity-25 scale-[0.98] border-dashed border-primary"
           : isDragOverTarget
@@ -284,7 +285,7 @@ export function DraggableBox({
               type="button"
               onClick={() => handleSpanStep(-1)}
               title="Decrease width"
-              className="px-1 hover:text-primary cursor-pointer disabled:opacity-30"
+              className="trigger-chip px-1 hover:text-primary cursor-pointer disabled:opacity-30"
               disabled={colSpan <= 3}
             >
               -
@@ -292,7 +293,7 @@ export function DraggableBox({
             <span
               onClick={() => onAutoFitWidth && onAutoFitWidth(id)}
               title="Click to auto-adjust width quota (4 -> 6 -> 8 -> 12)"
-              className="px-1 text-[9px] text-primary cursor-pointer hover:bg-primary/10 rounded transition-colors"
+              className="trigger-chip px-1 text-[9px] text-primary cursor-pointer hover:bg-primary/10 rounded transition-colors"
             >
               {colSpan}/12
             </span>
@@ -300,7 +301,7 @@ export function DraggableBox({
               type="button"
               onClick={() => handleSpanStep(1)}
               title="Increase width"
-              className="px-1 hover:text-primary cursor-pointer disabled:opacity-30"
+              className="trigger-chip px-1 hover:text-primary cursor-pointer disabled:opacity-30"
               disabled={colSpan >= 12}
             >
               +
@@ -312,9 +313,9 @@ export function DraggableBox({
             type="button"
             onClick={() => onUpdateSpan(id, colSpan === 12 ? 6 : 12)}
             title={colSpan === 12 ? "Restore Width" : "Full Width (12 Cols)"}
-            className="p-1 rounded-md text-on-surface-muted hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer text-[10px] font-mono"
+            className="trigger-chip p-1 rounded-md text-on-surface-muted hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer text-[11px]"
           >
-            {colSpan === 12 ? "⊟" : "⛶"}
+            {colSpan === 12 ? <FiMinimize2 className="w-3 h-3" /> : <FiMaximize2 className="w-3 h-3" />}
           </button>
 
           {/* Minimize/Collapse Toggle */}
@@ -322,53 +323,55 @@ export function DraggableBox({
             type="button"
             onClick={() => onToggleMinimize(id)}
             title={minimized ? "Expand Content" : "Minimize Box"}
-            className="p-1 rounded-md text-on-surface-muted hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer text-[11px] font-mono"
+            className="trigger-chip p-1 rounded-md text-on-surface-muted hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer text-[11px]"
           >
-            {minimized ? "▼" : "▲"}
+            <FiChevronDown className={`w-3.5 h-3.5 chevron-spin ${minimized ? "rotated" : ""}`} />
           </button>
         </div>
       </div>
 
       {/* ======================================================== */}
-      {/* BOX BODY (COLLAPSIBLE)                                   */}
+      {/* BOX BODY (COLLAPSIBLE WITH SMOOTH ACCORDION ANIMATION)   */}
       {/* ======================================================== */}
-      {!minimized && (
-        <div className="flex-1 p-4 flex flex-col overflow-hidden relative">
-          {children}
+      <div className={`box-accordion ${minimized ? "collapsed" : ""}`}>
+        <div className="box-accordion-inner flex-1 flex flex-col">
+          <div className="flex-1 p-4 flex flex-col overflow-hidden relative">
+            {children}
 
-          {/* ==================================================== */}
-          {/* INTERACTIVE MULTI-AXIS RESIZE HANDLES                */}
-          {/* ==================================================== */}
+            {/* ==================================================== */}
+            {/* INTERACTIVE MULTI-AXIS RESIZE HANDLES                */}
+            {/* ==================================================== */}
 
-          {/* 1. Right Edge Handle: Width auto-fit resize */}
-          <div
-            onPointerDown={(e) => startResize("width", e)}
-            onDoubleClick={() => onAutoFitWidth && onAutoFitWidth(id)}
-            title="Drag horizontally or double-click to auto-adjust width"
-            className="absolute top-0 right-0 w-2.5 h-full cursor-ew-resize hover:bg-primary/20 transition-colors flex items-center justify-center group/edge z-20"
-          >
-            <div className="w-0.5 h-8 bg-outline-variant/40 group-hover/edge:bg-primary group-hover/edge:h-12 rounded-full transition-all" />
-          </div>
+            {/* 1. Right Edge Handle: Width auto-fit resize */}
+            <div
+              onPointerDown={(e) => startResize("width", e)}
+              onDoubleClick={() => onAutoFitWidth && onAutoFitWidth(id)}
+              title="Drag horizontally or double-click to auto-adjust width"
+              className="absolute top-0 right-0 w-2.5 h-full cursor-ew-resize hover:bg-primary/20 transition-colors flex items-center justify-center group/edge z-20"
+            >
+              <div className="w-0.5 h-8 bg-outline-variant/40 group-hover/edge:bg-primary group-hover/edge:h-12 rounded-full transition-all" />
+            </div>
 
-          {/* 2. Bottom Edge Handle: Height auto-fit resize */}
-          <div
-            onPointerDown={(e) => startResize("height", e)}
-            title="Drag vertically to auto-fit height"
-            className="absolute bottom-0 left-0 w-full h-2.5 cursor-ns-resize hover:bg-primary/20 transition-colors flex items-center justify-center group/bottom z-20"
-          >
-            <div className="h-0.5 w-12 bg-outline-variant/40 group-hover/bottom:bg-primary group-hover/bottom:w-16 rounded-full transition-all" />
-          </div>
+            {/* 2. Bottom Edge Handle: Height auto-fit resize */}
+            <div
+              onPointerDown={(e) => startResize("height", e)}
+              title="Drag vertically to auto-fit height"
+              className="absolute bottom-0 left-0 w-full h-2.5 cursor-ns-resize hover:bg-primary/20 transition-colors flex items-center justify-center group/bottom z-20"
+            >
+              <div className="h-0.5 w-12 bg-outline-variant/40 group-hover/bottom:bg-primary group-hover/bottom:w-16 rounded-full transition-all" />
+            </div>
 
-          {/* 3. Corner Handle: Simultaneous Width & Height resize */}
-          <div
-            onPointerDown={(e) => startResize("both", e)}
-            title="Drag to auto-fit both width and height simultaneously"
-            className="absolute bottom-0.5 right-0.5 w-5 h-5 cursor-nwse-resize text-on-surface-muted/50 hover:text-primary hover:scale-110 select-none text-[12px] font-mono flex items-end justify-end p-0.5 z-20 transition-transform"
-          >
-            ◢
+            {/* 3. Corner Handle: Simultaneous Width & Height resize */}
+            <div
+              onPointerDown={(e) => startResize("both", e)}
+              title="Drag to auto-fit both width and height simultaneously"
+              className="absolute bottom-0.5 right-0.5 w-5 h-5 cursor-nwse-resize text-on-surface-muted/50 hover:text-primary hover:scale-110 select-none text-[12px] font-mono flex items-end justify-end p-0.5 z-20 transition-transform"
+            >
+              <FiMaximize2 className="w-3 h-3 rotate-90" />
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
