@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import pkg from "../package.json";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "RND Next.js Template",
-    short_name: "RND",
-    description: "Livro Systems RND Next.js template — Atomic Design, Drizzle, Better Auth",
+    name: pkg.name,
+    short_name: pkg.name,
+    description: `${pkg.name} — ModernBERT Incident Command Console`,
     start_url: "/",
     display: "standalone",
     background_color: "#fafafa",

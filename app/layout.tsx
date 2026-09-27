@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import Script from "next/script";
+import pkg from "../package.json";
 import { THEME_INIT_SCRIPT } from "@/lib/theme/theme-init";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import "./globals.css";
@@ -16,11 +17,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Tiyakaluod Console",
-  description: "Laya Model Command Console & ModernBERT High-Density Decision Platform",
+  title: pkg.name,
+  description: `${pkg.name} — ModernBERT Incident Command Console`,
+  applicationName: pkg.name,
   appleWebApp: {
     capable: true,
-    title: "Tiyakaluod",
+    title: pkg.name,
   },
   icons: {
     icon: "/icon.svg",
